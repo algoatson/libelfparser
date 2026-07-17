@@ -26,37 +26,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         println!(
             "      Offset:          0x{:x}",
-            segment.header().file_offset()
+            segment.file_offset()
         );
 
         println!(
             "      Virtual Address: 0x{:x}",
-            segment.header().virtual_address()
+            segment.virtual_address()
         );
 
         println!(
             "      Physical Address: 0x{:x}",
-            segment.header().physical_address()
+            segment.physical_address()
         );
 
         println!(
             "      File Size:       {}",
-            segment.header().file_size()
+            segment.file_size()
         );
 
         println!(
             "      Memory Size:     {}",
-            segment.header().memory_size()
+            segment.memory_size()
         );
 
         println!(
             "      Flags:           {:?}",
-            segment.header().flags()
+            segment.flags()
         );
 
         println!(
             "      Alignment:       {}",
-            segment.header().alignment()
+            segment.alignment()
         );
     }
 
