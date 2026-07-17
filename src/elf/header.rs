@@ -233,12 +233,12 @@ impl ElfProgramHeader {
 
 }
 
-pub struct ElfProgram<'a> {
+pub struct ElfSegment<'a> {
     header: ElfProgramHeader,
     data: &'a [u8],
 }
 
-impl<'a> ElfProgram<'a> {
+impl<'a> ElfSegment<'a> {
     pub(crate) fn new(
         header: ElfProgramHeader,
         data: &'a [u8],

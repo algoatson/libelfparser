@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use super::header::{ElfHeader, ElfProgramHeader, ElfProgram, ElfSectionHeader, ElfSection};
+use super::header::{ElfHeader, ElfProgramHeader, ElfSegment, ElfSectionHeader, ElfSection};
 use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr};
 use super::enums::SectionType;
 use super::constants::SHN_XINDEX;
@@ -27,7 +27,7 @@ fn get_string(table: &[u8], offset: u32) -> Result<&str, ElfError> {
 pub struct ElfFile<'a> {
     bytes: &'a [u8],
     elf_hdr: ElfHeader,
-    prog_hdrs: Vec<ElfProgram<'a>>,
+    prog_hdrs: Vec<ElfSegment<'a>>,
     sect_hdrs: Vec<ElfSection<'a>>
 }
 
@@ -36,7 +36,7 @@ impl<'a> ElfFile<'a> {
         &self.elf_hdr
     }
 
-    pub fn segments(&self) -> &[ElfProgram<'a>] {
+    pub fn segments(&self) -> &[ElfSegment<'a>] {
         &self.prog_hdrs
     }
 
@@ -86,7 +86,7 @@ impl<'a> ElfFile<'a> {
                 Err(e) => return Err(e),
             };
 
-            segments.push(ElfProgram::new(
+            segments.push(ElfSegment::new(
                 ElfProgramHeader::from_32(&raw_phdr),
                 &bytes[start..end]
             ));
@@ -182,7 +182,7 @@ impl<'a> ElfFile<'a> {
 
             let raw_phdr = Elf64_Phdr::from_bytes(&bytes[start..end])?;
 
-            segments.push(ElfProgram::new(
+            segments.push(ElfSegment::new(
                 ElfProgramHeader::from_64(&raw_phdr),
                 &bytes[start..end]
             ));
