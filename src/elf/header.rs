@@ -1,4 +1,5 @@
-use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags};
+use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags, SymbolBinding, SymbolType};
+use super::raw::RawSym;
 
 pub struct ElfHeader {
     magic: [u8; 4],
@@ -257,6 +258,8 @@ impl<'a> ElfSegment<'a> {
         self.data
     }
 
+    // forwarder functions
+
     pub fn segment_type(&self) -> SegmentType {
         self.header().segment_type
     }
@@ -422,6 +425,8 @@ impl<'a> ElfSection<'a> {
         self.name = Some(name);
     }
 
+    // forwarder functions
+
     pub fn name_offset(&self) -> u32 {
         self.header.name_offset()
     }
@@ -455,10 +460,24 @@ impl<'a> ElfSection<'a> {
     }
 }
 
-// struct ElfSymbol {
-//     name: Option<&str>,
-//     value: u64,
-//     size: u64,
-//     binding: SymbolBinding,
-//     symbol_type: SymbolType,
-// }
+struct ElfSymbol<'a> {
+    name: Option<&'a str>,
+    value: u64,
+    size: u64,
+    binding: SymbolBinding,
+    symbol_type: SymbolType,
+    section_index: u32,
+}
+
+impl<'a> ElfSymbol<'a> {
+    pub(crate) fn from<T: RawSym>(raw: &T) -> Self {
+        Self {
+            name: None,
+            value: raw.value() as u64,
+            size: raw.size() as u64,
+            binding: SymbolBinding::from(raw.info() >> 4),
+            symbol_type: SymbolType::from(raw.info() & 0xf),
+            section_index: raw.section_index() as u32,
+        }
+    }
+}

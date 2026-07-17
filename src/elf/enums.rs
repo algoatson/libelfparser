@@ -264,3 +264,68 @@ bitflags! {
         const TLS              = 0x400;
     }
 }
+
+#[derive(Debug, Clone, Copy)]
+pub enum SymbolBinding {
+    Local,
+    Global,
+    Weak,
+
+    // OS specific range
+    OsSpecific(u8),
+
+    // Processor specific range
+    ProcessorSpecific(u8),
+
+    Unknown(u8),
+}
+
+impl From<u8> for SymbolBinding {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => Self::Local,
+            1 => Self::Global,
+            2 => Self::Weak,
+
+            10..=12 => Self::OsSpecific(value),
+            13..=15 => Self::ProcessorSpecific(value),
+
+            other => Self::Unknown(other),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum SymbolType {
+    NoType,
+    Object,
+    Function,
+    Section,
+    File,
+    Common,
+    Tls,
+
+    OsSpecific(u8),
+    ProcessorSpecific(u8),
+
+    Unknown(u8),
+}
+
+impl From<u8> for SymbolType {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => Self::NoType,
+            1 => Self::Object,
+            2 => Self::Function,
+            3 => Self::Section,
+            4 => Self::File,
+            5 => Self::Common,
+            6 => Self::Tls,
+
+            10..=12 => Self::OsSpecific(value),
+            13..=15 => Self::ProcessorSpecific(value),
+
+            other => Self::Unknown(other),
+        }
+    }
+}
