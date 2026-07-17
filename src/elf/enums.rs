@@ -198,15 +198,15 @@ impl SegmentFlags {
     pub const READ: u32 = 0x4;
 
     pub fn readable(self) -> bool {
-        self.0 & 0x4 != 0
+        self.0 & SegmentFlags::READ != 0
     }
 
     pub fn writable(self) -> bool {
-        self.0 & 0x2 != 0
+        self.0 & SegmentFlags::WRITE != 0
     }
 
     pub fn executable(self) -> bool {
-        self.0 & 0x1 != 0
+        self.0 & SegmentFlags::EXECUTE != 0
     }
 
     pub fn bits(self) -> u32 {

@@ -471,12 +471,14 @@ struct ElfSymbol<'a> {
 
 impl<'a> ElfSymbol<'a> {
     pub(crate) fn from<T: RawSymbol>(raw: &T) -> Self {
+        let info = raw.info();
+
         Self {
             name: None,
             value: raw.value() as u64,
             size: raw.size() as u64,
-            binding: SymbolBinding::from(raw.info() >> 4),
-            symbol_type: SymbolType::from(raw.info() & 0xf),
+            binding: SymbolBinding::from(info >> 4),
+            symbol_type: SymbolType::from(info & 0xf),
             section_index: raw.section_index() as u32,
         }
     }
