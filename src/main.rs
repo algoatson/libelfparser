@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (index, segment) in elf.segments().iter().enumerate() {
         println!();
-        println!("  [{}] {:?}", index, segment.header().segment_type());
+        println!("  [{}] {:?}", index, segment.segment_type());
 
         println!(
             "      Offset:          0x{:x}",
