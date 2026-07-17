@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use super::header::{ElfHeader, ElfProgramHeader, ElfSegment, ElfSectionHeader, ElfSection};
+use super::header::{ElfHeader, ElfProgramHeader, ElfSegment, ElfSectionHeader, ElfSection, ElfSymbol};
 use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr};
 use super::enums::SectionType;
 use super::constants::SHN_XINDEX;

@@ -460,7 +460,7 @@ impl<'a> ElfSection<'a> {
     }
 }
 
-struct ElfSymbol<'a> {
+pub struct ElfSymbol<'a> {
     name: Option<&'a str>,
     value: u64,
     size: u64,
