@@ -189,10 +189,14 @@ impl From<SegmentType> for u32 {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct SegmentFlags(u32);
 
 impl SegmentFlags {
+    pub const EXECUTE: u32 = 0x1;
+    pub const WRITE: u32 = 0x2;
+    pub const READ: u32 = 0x4;
+
     pub fn readable(self) -> bool {
         self.0 & 0x4 != 0
     }
@@ -204,11 +208,31 @@ impl SegmentFlags {
     pub fn executable(self) -> bool {
         self.0 & 0x1 != 0
     }
+
+    pub fn bits(self) -> u32 {
+        self.0
+    }
 }
 
 impl From<u32> for SegmentFlags {
     fn from(value: u32) -> Self {
         SegmentFlags(value)
+    }
+}
+
+impl std::fmt::Display for SegmentFlags {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let r = if self.readable() { 'R' } else { '-' };
+        let w = if self.writable() { 'W' } else { '-' };
+        let x = if self.executable() { 'X' } else { '-' };
+
+        write!(f, "{}{}{}", r, w, x)
+    }
+}
+
+impl std::fmt::Debug for SegmentFlags {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SegmentFlags({:#x}, {})", self.0, self)
     }
 }
 

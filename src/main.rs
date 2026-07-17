@@ -1,176 +1,182 @@
-use std::env;
 use std::fs;
-use std::process;
+
+use clap::Parser;
+use comfy_table::{
+    presets::UTF8_FULL,
+    Table,
+};
+
+use owo_colors::OwoColorize;
 
 use libelfctf::elf::ElfFile;
 
 
-fn main() {
+#[derive(Parser)]
+#[command(
+    name="elfparser",
+    about="A Rust ELF inspection tool"
+)]
+struct Args {
 
-    let args: Vec<String> = env::args().collect();
+    /// ELF file to inspect
+    file: String,
 
-    if args.len() != 2 {
-        eprintln!("Usage: {} <elf-file>", args[0]);
-        process::exit(1);
-    }
-
-
-    let path = &args[1];
-
-
-    let bytes = match fs::read(path) {
-        Ok(data) => data,
-        Err(e) => {
-            eprintln!("Failed to read {}: {}", path, e);
-            process::exit(1);
-        }
-    };
+}
 
 
-    let elf = match ElfFile::parse(&bytes) {
-        Ok(elf) => elf,
-        Err(e) => {
-            eprintln!("Failed to parse ELF: {:?}", e);
-            process::exit(1);
-        }
-    };
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    let args = Args::parse();
+
+    let bytes = fs::read(&args.file)?;
+
+    let elf = ElfFile::parse(&bytes)?;
+
+
+    println!();
+    println!("{}", "╭──────────────────────────────╮".cyan());
+    println!("{}", "│          ELF FILE            │".cyan());
+    println!("{}", "╰──────────────────────────────╯".cyan());
+    println!();
 
 
     let header = elf.header();
 
 
+    println!(
+        "{} {}",
+        "File:".bold(),
+        args.file
+    );
+
+    println!(
+        "{} {} bytes",
+        "Size:".bold(),
+        bytes.len()
+    );
 
     println!();
-    println!("╔═══════════════════════════════════════════════╗");
-    println!("║             libelfparser analyzer             ║");
-    println!("╚═══════════════════════════════════════════════╝");
-    println!();
-
-
-    println!("File");
-    println!("----");
-    println!("Path:       {}", path);
-    println!("Size:       {} bytes", bytes.len());
-
-
-    println!();
-    println!("ELF Header");
-    println!("----------");
-
-    println!("Magic:      {:02x?}", header.magic());
-    println!("Class:      {:?}", header.class());
-    println!("Endian:     {:?}", header.endianness());
-    println!("Type:       {:?}", header.file_type());
-    println!("Machine:    {:?}", header.machine());
-    println!("Entry:      0x{:x}", header.entry());
-
-
-
-    println!();
-    println!("Program Headers");
-    println!("----------------");
 
 
     println!(
-        "{:<5} {:<18} {:<18} {:<12} {:<12}",
-        "ID",
-        "TYPE",
-        "ADDRESS",
-        "FILE SIZE",
-        "MEM SIZE"
+        "{} {} {} {}",
+        format!("{:?}", header.class()).green(),
+        format!("{:?}", header.machine()).green(),
+        format!("{:?}", header.endianness()).green(),
+        format!("{:?}", header.file_type()).green(),
     );
+
+
+    println!(
+        "{} 0x{:x}",
+        "Entry:".bold(),
+        header.entry()
+    );
+
+
+    println!();
+
+
+    //
+    // PROGRAM HEADERS
+    //
+
+    println!("{}", "PROGRAM HEADERS".yellow().bold());
+
+    let mut table = Table::new();
+
+    table.load_preset(UTF8_FULL);
+
+    table.set_header(vec![
+        "#",
+        "Type",
+        "Offset",
+        "Virt Addr",
+        "File Size",
+        "Memory",
+        "Flags",
+    ]);
 
 
     for (i, segment) in elf.segments().iter().enumerate() {
 
-        println!(
-            "{:<5} {:<18?} 0x{:016x} {:<12} {:<12}",
-            i,
-            segment.segment_type(),
-            segment.virtual_address(),
-            segment.file_size(),
-            segment.memory_size()
-        );
+        table.add_row(vec![
+            i.to_string(),
+            format!("{:?}", segment.segment_type()),
+            format!("0x{:x}", segment.file_offset()),
+            format!("0x{:x}", segment.virtual_address()),
+            segment.file_size().to_string(),
+            segment.memory_size().to_string(),
+            format!("{}", segment.flags()),
+        ]);
 
-        println!(
-            "      Offset: 0x{:x} Flags: {:?}",
-            segment.file_offset(),
-            segment.flags()
-        );
     }
 
 
+    println!("{}", table);
 
     println!();
-    println!("Sections");
-    println!("--------");
 
 
-    println!(
-        "{:<5} {:<25} {:<18} {:<12}",
-        "ID",
-        "NAME",
-        "ADDRESS",
-        "SIZE"
-    );
+    //
+    // SECTIONS
+    //
+
+    println!("{}", "SECTIONS".yellow().bold());
+
+
+    let mut table = Table::new();
+
+    table.load_preset(UTF8_FULL);
+
+
+    table.set_header(vec![
+        "#",
+        "Name",
+        "Type",
+        "Address",
+        "Offset",
+        "Size",
+        "Flags",
+    ]);
 
 
     for (i, section) in elf.sections().iter().enumerate() {
 
-        let name = section
-            .name()
-            .unwrap_or("<unnamed>");
+        table.add_row(vec![
+            i.to_string(),
 
+            section
+                .name()
+                .unwrap_or("<unknown>")
+                .to_string(),
 
-        println!(
-            "{:<5} {:<25} 0x{:016x} {:<12}",
-            i,
-            name,
-            section.virtual_address(),
-            section.size()
-        );
+            format!("{:?}", section.section_type()),
 
+            format!("0x{:x}",
+                section.virtual_address()),
 
-        println!(
-            "      Type: {:?} Flags: {:?}",
-            section.section_type(),
-            section.flags()
-        );
+            format!("0x{:x}",
+                section.file_offset()),
+
+            section.size().to_string(),
+
+            format!("{:?}",
+                section.flags()),
+        ]);
+
     }
 
 
-
-    println!();
-    println!("Statistics");
-    println!("----------");
-
-    println!(
-        "Segments: {}",
-        elf.segments().len()
-    );
-
-    println!(
-        "Sections: {}",
-        elf.sections().len()
-    );
-
-
-    let executable_sections =
-        elf.sections()
-            .iter()
-            .filter(|s| {
-                format!("{:?}", s.flags())
-                    .contains("EXEC")
-            })
-            .count();
-
-
-    println!(
-        "Executable sections: {}",
-        executable_sections
-    );
+    println!("{}", table);
 
 
     println!();
-    println!("Analysis complete.");
+    println!(
+        "{} parsed successfully",
+        "✓".green()
+    );
+
+
+    Ok(())
 }
