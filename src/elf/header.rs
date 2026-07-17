@@ -1,5 +1,5 @@
 use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags, SymbolBinding, SymbolType};
-use super::raw::RawSym;
+use super::raw::RawSymbol;
 
 pub struct ElfHeader {
     magic: [u8; 4],
@@ -470,7 +470,7 @@ struct ElfSymbol<'a> {
 }
 
 impl<'a> ElfSymbol<'a> {
-    pub(crate) fn from<T: RawSym>(raw: &T) -> Self {
+    pub(crate) fn from<T: RawSymbol>(raw: &T) -> Self {
         Self {
             name: None,
             value: raw.value() as u64,

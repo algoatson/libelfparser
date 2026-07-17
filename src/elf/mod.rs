@@ -15,4 +15,8 @@ pub use enums::{
     ElfClass,
     Machine,
     FileType,
+    SegmentType,
+    SectionType,
+    SymbolBinding,
+    SymbolType
 };

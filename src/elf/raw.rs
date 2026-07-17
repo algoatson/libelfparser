@@ -160,7 +160,7 @@ pub struct Elf32_Sym {
     pub st_shndx: u16,
 }
 
-pub trait RawSym {
+pub trait RawSymbol {
     fn name(&self) -> u32;
     fn value(&self) -> u64;
     fn size(&self) -> u64;
@@ -168,7 +168,7 @@ pub trait RawSym {
     fn section_index(&self) -> u32;
 }
 
-impl RawSym for Elf32_Sym {
+impl RawSymbol for Elf32_Sym {
     fn name(&self) -> u32 {
         self.st_name
     }
@@ -200,7 +200,7 @@ pub struct Elf64_Sym {
     pub st_size: u64,
 }
 
-impl RawSym for Elf64_Sym {
+impl RawSymbol for Elf64_Sym {
     fn name(&self) -> u32 {
         self.st_name
     }
