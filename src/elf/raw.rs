@@ -1,3 +1,4 @@
+use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags, SymbolBinding, SymbolType};
 use super::error::ElfError;
 
 pub(crate) fn read_struct<T>(bytes: &[u8]) -> Result<T, ElfError> {
@@ -158,6 +159,103 @@ pub struct Elf32_Sym {
     pub st_info: u8,
     pub st_other: u8,
     pub st_shndx: u16,
+}
+
+pub trait RawSectionHeader {
+    fn name_offset(&self) -> u32;
+    fn section_type(&self) -> SectionType;
+    fn flags(&self) -> SectionFlags;
+    fn virtual_address(&self) -> u64;
+    fn file_offset(&self) -> u64;
+    fn size(&self) -> u64;
+    fn link(&self) -> u32;
+    fn info(&self) -> u32;
+    fn alignment(&self) -> u64;
+    fn entry_size(&self) -> u64;
+}
+
+impl RawSectionHeader for Elf32_Shdr {
+    fn name_offset(&self) -> u32 {
+        self.sh_name
+    }
+
+    fn section_type(&self) -> SectionType {
+        SectionType::from(self.sh_type)
+    }
+
+    fn flags(&self) -> SectionFlags {
+        SectionFlags::from_bits_truncate(self.sh_flags as u64)
+    }
+
+    fn virtual_address(&self) -> u64 {
+        self.sh_addr as u64
+    }
+
+    fn file_offset(&self) -> u64 {
+        self.sh_offset as u64
+    }
+
+    fn size(&self) -> u64 {
+        self.sh_size as u64
+    }
+
+    fn link(&self) -> u32 {
+        self.sh_link
+    }
+
+    fn info(&self) -> u32 {
+        self.sh_info
+    }
+    
+    fn alignment(&self) -> u64 {
+        self.sh_addralign as u64
+    }
+
+    fn entry_size(&self) -> u64 {
+        self.sh_entsize as u64
+    }
+}
+
+impl RawSectionHeader for Elf64_Shdr {
+    fn name_offset(&self) -> u32 {
+        self.sh_name
+    }
+
+    fn section_type(&self) -> SectionType {
+        SectionType::from(self.sh_type)
+    }
+
+    fn flags(&self) -> SectionFlags {
+        SectionFlags::from_bits_truncate(self.sh_flags as u64)
+    }
+
+    fn virtual_address(&self) -> u64 {
+        self.sh_addr as u64
+    }
+
+    fn file_offset(&self) -> u64 {
+        self.sh_offset as u64
+    }
+
+    fn size(&self) -> u64 {
+        self.sh_size as u64
+    }
+
+    fn link(&self) -> u32 {
+        self.sh_link
+    }
+
+    fn info(&self) -> u32 {
+        self.sh_info
+    }
+    
+    fn alignment(&self) -> u64 {
+        self.sh_addralign as u64
+    }
+
+    fn entry_size(&self) -> u64 {
+        self.sh_entsize
+    }
 }
 
 pub trait RawSymbol {

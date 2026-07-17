@@ -1,5 +1,5 @@
 use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags, SymbolBinding, SymbolType};
-use super::raw::RawSymbol;
+use super::raw::{RawSectionHeader, RawSymbol};
 
 pub struct ElfHeader {
     magic: [u8; 4],
@@ -317,41 +317,22 @@ pub struct ElfSectionHeader {
 }
 
 impl ElfSectionHeader {
-    pub(crate) fn from_32(raw: &crate::elf::raw::Elf32_Shdr) -> Self {
+    pub(crate) fn from<T: RawSectionHeader>(raw: &T) -> Self {
         Self {
-            name_offset: raw.sh_name,
-            section_type: SectionType::from(raw.sh_type),
-            flags: SectionFlags::from_bits_truncate(raw.sh_flags as u64),
+            name_offset: raw.name_offset(),
+            section_type: SectionType::from(raw.section_type()),
+            flags: raw.flags(),
             
-            virtual_address: raw.sh_addr as u64,
-            file_offset: raw.sh_offset as u64,
+            virtual_address: raw.virtual_address(),
+            file_offset: raw.file_offset(),
 
-            size: raw.sh_size as u64,
+            size: raw.size(),
 
-            link: raw.sh_link,
-            info: raw.sh_info,
+            link: raw.link(),
+            info: raw.info(),
 
-            alignment: raw.sh_addralign as u64,
-            entry_size: raw.sh_entsize as u64
-        }
-    }
-
-    pub(crate) fn from_64(raw: &crate::elf::raw::Elf64_Shdr) -> Self {
-        Self {
-            name_offset: raw.sh_name,
-            section_type: SectionType::from(raw.sh_type),
-            flags: SectionFlags::from_bits_truncate(raw.sh_flags),
-            
-            virtual_address: raw.sh_addr,
-            file_offset: raw.sh_offset,
-
-            size: raw.sh_size,
-
-            link: raw.sh_link,
-            info: raw.sh_info,
-
-            alignment: raw.sh_addralign,
-            entry_size: raw.sh_entsize
+            alignment: raw.alignment(),
+            entry_size: raw.entry_size(),
         }
     }
 
@@ -450,6 +431,10 @@ impl<'a> ElfSection<'a> {
 
     pub fn size(&self) -> u64 {
         self.header.size()
+    }
+
+    pub fn link(&self) -> u32 {
+        self.header().link()
     }
 
     pub fn flags(&self) -> SectionFlags {

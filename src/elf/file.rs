@@ -104,7 +104,7 @@ impl<'a> ElfFile<'a> {
 
             let raw_shdr = Elf32_Shdr::from_bytes(&bytes[start..end])?;
 
-            let shdr = ElfSectionHeader::from_32(&raw_shdr);
+            let shdr = ElfSectionHeader::from(&raw_shdr);
 
             let data = match shdr.section_type() {
                 SectionType::NoBits => &[],
@@ -136,7 +136,7 @@ impl<'a> ElfFile<'a> {
 
         if strndx == SHN_XINDEX {
             // read actual index from section 0 sh_link.
-            strndx = sections[0].header().link();
+            strndx = sections[0].link();
         }
 
         let strtab = sections
@@ -200,7 +200,7 @@ impl<'a> ElfFile<'a> {
 
             let raw_shdr = Elf64_Shdr::from_bytes(&bytes[start..end])?;
 
-            let shdr = ElfSectionHeader::from_64(&raw_shdr);
+            let shdr = ElfSectionHeader::from(&raw_shdr);
 
             let data = match shdr.section_type() {
                 SectionType::NoBits => &[],
