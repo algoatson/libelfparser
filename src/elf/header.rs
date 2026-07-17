@@ -233,6 +233,63 @@ impl ElfProgramHeader {
 
 }
 
+pub struct ElfProgram<'a> {
+    header: ElfProgramHeader,
+    data: &'a [u8],
+}
+
+impl<'a> ElfProgram<'a> {
+    pub(crate) fn new(
+        header: ElfProgramHeader,
+        data: &'a [u8],
+    ) -> Self {
+        Self {
+            header,
+            data,
+        }
+    }
+
+    pub fn header(&self) -> &ElfProgramHeader {
+        &self.header
+    }
+
+    pub fn data(&self) -> &'a [u8] {
+        self.data
+    }
+
+    pub fn segment_type(&self) -> SegmentType {
+        self.header().segment_type
+    }
+
+    pub fn file_offset(&self) -> u64 {
+        self.header().file_offset
+    }
+
+    pub fn virtual_address(&self) -> u64 {
+        self.header().virt_address
+    }
+
+    pub fn physical_address(&self) -> u64 {
+        self.header().phys_address
+    }
+
+    pub fn file_size(&self) -> u64 {
+        self.header().file_size
+    }
+
+    pub fn memory_size(&self) -> u64 {
+        self.header().memory_size
+    }
+
+    pub fn flags(&self) -> SegmentFlags {
+        self.header().flags
+    }
+
+    pub fn alignment(&self) -> u64 {
+        self.header().alignment
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct ElfSectionHeader {
     pub name_offset: u32,

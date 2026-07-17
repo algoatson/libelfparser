@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use super::header::{ElfHeader, ElfProgramHeader, ElfSectionHeader, ElfSection};
+use super::header::{ElfHeader, ElfProgramHeader, ElfProgram, ElfSectionHeader, ElfSection};
 use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr};
 use super::enums::SectionType;
 use super::constants::SHN_XINDEX;
@@ -27,7 +27,7 @@ fn get_string(table: &[u8], offset: u32) -> Result<&str, ElfError> {
 pub struct ElfFile<'a> {
     bytes: &'a [u8],
     elf_hdr: ElfHeader,
-    prog_hdrs: Vec<ElfProgramHeader>,
+    prog_hdrs: Vec<ElfProgram<'a>>,
     sect_hdrs: Vec<ElfSection<'a>>
 }
 
@@ -36,7 +36,7 @@ impl<'a> ElfFile<'a> {
         &self.elf_hdr
     }
 
-    pub fn program_headers(&self) -> &[ElfProgramHeader] {
+    pub fn segments(&self) -> &[ElfProgram<'a>] {
         &self.prog_hdrs
     }
 
@@ -71,7 +71,7 @@ impl<'a> ElfFile<'a> {
 
         let header = ElfHeader::from_32(&raw);
 
-        let mut phdrs = Vec::new();
+        let mut segments = Vec::new();
 
         let ph_offset = header.program_header_offset() as usize;
         let ph_size = header.program_header_size() as usize;
@@ -86,7 +86,10 @@ impl<'a> ElfFile<'a> {
                 Err(e) => return Err(e),
             };
 
-            phdrs.push(ElfProgramHeader::from_32(&raw_phdr));
+            segments.push(ElfProgram::new(
+                ElfProgramHeader::from_32(&raw_phdr),
+                &bytes[start..end]
+            ));
         }
 
         let mut sections = Vec::new();
@@ -154,7 +157,7 @@ impl<'a> ElfFile<'a> {
         Ok(Self {
             bytes,
             elf_hdr: header,
-            prog_hdrs: phdrs,
+            prog_hdrs: segments,
             sect_hdrs: sections,
         })
     }
@@ -167,7 +170,7 @@ impl<'a> ElfFile<'a> {
 
         let header = ElfHeader::from_64(&raw);
 
-        let mut phdrs = Vec::new();
+        let mut segments = Vec::new();
 
         let ph_offset = header.program_header_offset() as usize;
         let ph_size = header.program_header_size() as usize;
@@ -179,7 +182,10 @@ impl<'a> ElfFile<'a> {
 
             let raw_phdr = Elf64_Phdr::from_bytes(&bytes[start..end])?;
 
-            phdrs.push(ElfProgramHeader::from_64(&raw_phdr));
+            segments.push(ElfProgram::new(
+                ElfProgramHeader::from_64(&raw_phdr),
+                &bytes[start..end]
+            ));
         }
 
         let mut sections = Vec::new();
@@ -249,7 +255,7 @@ impl<'a> ElfFile<'a> {
         Ok(Self {
             bytes,
             elf_hdr: header,
-            prog_hdrs: phdrs,
+            prog_hdrs: segments,
             sect_hdrs: sections,
         })
     }

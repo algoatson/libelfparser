@@ -20,43 +20,43 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
     println!("Program Headers:");
 
-    for (index, phdr) in elf.program_headers().iter().enumerate() {
+    for (index, segment) in elf.segments().iter().enumerate() {
         println!();
-        println!("  [{}] {:?}", index, phdr.segment_type());
+        println!("  [{}] {:?}", index, segment.header().segment_type());
 
         println!(
             "      Offset:          0x{:x}",
-            phdr.file_offset()
+            segment.header().file_offset()
         );
 
         println!(
             "      Virtual Address: 0x{:x}",
-            phdr.virtual_address()
+            segment.header().virtual_address()
         );
 
         println!(
             "      Physical Address: 0x{:x}",
-            phdr.physical_address()
+            segment.header().physical_address()
         );
 
         println!(
             "      File Size:       {}",
-            phdr.file_size()
+            segment.header().file_size()
         );
 
         println!(
             "      Memory Size:     {}",
-            phdr.memory_size()
+            segment.header().memory_size()
         );
 
         println!(
             "      Flags:           {:?}",
-            phdr.flags()
+            segment.header().flags()
         );
 
         println!(
             "      Alignment:       {}",
-            phdr.alignment()
+            segment.header().alignment()
         );
     }
 
