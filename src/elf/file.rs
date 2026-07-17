@@ -148,7 +148,7 @@ impl<'a> ElfFile<'a> {
         for section in &mut sections {
             let name = get_string(
                 strtab_data,
-                section.header().name_offset()
+                section.name_offset()
             )?;
 
             section.set_name(name);
@@ -244,7 +244,7 @@ impl<'a> ElfFile<'a> {
         for section in &mut sections {
             let name = get_string(
                 strtab_data,
-                section.header().name_offset()
+                section.name_offset()
             )?;
 
             section.set_name(name);
