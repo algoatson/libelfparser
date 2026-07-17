@@ -1,5 +1,22 @@
 # libelfparser
 
+```
+ElfFile
+│
+├── ElfHeader
+│
+├── Vec<ElfSegment<'a>>
+│      │
+│      ├── ElfProgramHeader
+│      └── &'a [u8]  (segment contents)
+│
+└── Vec<ElfSection<'a>>
+       │
+       ├── ElfSectionHeader
+       ├── Option<&'a str> (resolved name)
+       └── &'a [u8] (section contents)
+```
+
 ✅ ELF magic validation
 ✅ ELF32/ELF64 dispatch
 ✅ ELF header abstraction

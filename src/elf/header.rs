@@ -258,6 +258,11 @@ impl<'a> ElfSegment<'a> {
         self.data
     }
 
+    pub fn contains_address(&self, addr: u64) -> bool {
+        addr >= self.virtual_address()
+            && addr < self.virtual_address() + self.memory_size()
+    }
+
     // forwarder functions
 
     pub fn segment_type(&self) -> SegmentType {
