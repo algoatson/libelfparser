@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use super::header::{ElfHeader, ElfProgramHeader, ElfSegment, ElfSectionHeader, ElfSection, ElfSymbol};
+use super::relocation::ElfRelocation;
 use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr, Elf32_Sym, Elf64_Sym};
 use super::enums::SectionType;
 use super::constants::SHN_XINDEX;
@@ -26,27 +27,37 @@ fn get_string(table: &[u8], offset: u32) -> Result<&str, ElfError> {
 
 pub struct ElfFile<'a> {
     bytes: &'a [u8],
-    elf_hdr: ElfHeader,
-    prog_hdrs: Vec<ElfSegment<'a>>,
-    sect_hdrs: Vec<ElfSection<'a>>,
-    symbols: Vec<ElfSymbol<'a>>
+    header: ElfHeader,
+    segments: Vec<ElfSegment<'a>>,
+    sections: Vec<ElfSection<'a>>,
+    symbols: Vec<ElfSymbol<'a>>,
+    relocations: Vec<ElfRelocation>,
 }
 
 impl<'a> ElfFile<'a> {
     pub fn header(&self) -> &ElfHeader {
-        &self.elf_hdr
+        &self.header
     }
 
     pub fn segments(&self) -> &[ElfSegment<'a>] {
-        &self.prog_hdrs
+        &self.segments
     }
 
     pub fn sections(&self) -> &[ElfSection<'a>] {
-        &self.sect_hdrs
+        &self.sections
     }
 
     pub fn symbols(&self) -> &[ElfSymbol<'a>] {
         &self.symbols
+    }
+
+    pub fn sections_by_type(
+        &self,
+        ty: SectionType,
+    ) -> impl Iterator<Item=&ElfSection<'a>> {
+        self.sections()
+            .iter()
+            .filter(move |section| section.section_type() == ty)
     }
 
     pub fn parse(bytes: &'a[u8]) -> Result<Self, ElfError> {
@@ -201,12 +212,15 @@ impl<'a> ElfFile<'a> {
             }
         }
 
+        let mut relocations = Vec::new();
+
         Ok(Self {
             bytes,
-            elf_hdr: header,
-            prog_hdrs: segments,
-            sect_hdrs: sections,
-            symbols: symbols,
+            header,
+            segments,
+            sections,
+            symbols,
+            relocations
         })
     }
 
@@ -338,12 +352,36 @@ impl<'a> ElfFile<'a> {
             }
         }
 
+        // i could probably merge match block, however
+        // im not too certain about this.
+
+        let mut relocations = Vec::new();
+
+        // next step is to resolve relocations
+        for section in &sections {
+            match section.section_type() {
+                SectionType::Rela => {
+                    let symtab = sections
+                        .get(section.link() as usize)
+                        .ok_or(ElfError::InvalidSectionIndex)?;
+
+                    // parse_relocations(
+                    //     section,
+                    //     symtab,
+                    // );
+                }
+
+                _ => {}
+            }
+        }
+
         Ok(Self {
             bytes,
-            elf_hdr: header,
-            prog_hdrs: segments,
-            sect_hdrs: sections,
-            symbols: symbols,
+            header,
+            segments,
+            sections,
+            symbols,
+            relocations
         })
     }
 }

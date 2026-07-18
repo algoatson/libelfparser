@@ -1,4 +1,4 @@
-use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags, SymbolBinding, SymbolType};
+use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags, SymbolBinding, SymbolType, RelocationType};
 use super::raw::{RawProgramHeader, RawSectionHeader, RawSymbol};
 
 pub struct ElfHeader {

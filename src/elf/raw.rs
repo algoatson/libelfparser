@@ -398,3 +398,29 @@ impl RawSymbol for Elf64_Sym {
         self.st_shndx as u32
     }
 }
+
+#[repr(C)]
+pub struct Elf32_Rel {
+    r_offset: u32,
+    r_info: u32,
+}
+
+#[repr(C)]
+pub struct Elf64_Rel {
+    r_offset: u64,
+    r_info: u64,
+}
+
+#[repr(C)]
+pub struct Elf32_Rela {
+    r_offset: u32,
+    r_info: u32,
+    r_addend: i32, 
+}
+
+#[repr(C)]
+pub struct Elf64_Rela {
+    r_offset: u64,
+    r_info: u64,
+    r_addend: i64,
+}

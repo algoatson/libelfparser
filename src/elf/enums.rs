@@ -353,3 +353,12 @@ impl From<u8> for SymbolType {
         }
     }
 }
+
+pub enum RelocationType {
+    X86_64_64,
+    X86_64_PC32,
+    X86_64_GLOB_DAT,
+    X86_64_JUMP_SLOT,
+    Relative,
+    Unknown(u32),
+}
