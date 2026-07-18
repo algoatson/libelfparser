@@ -9,6 +9,7 @@ pub enum ElfError {
     InvalidOffset,
     InvalidString,
     InvalidStringOffset,
+    InvalidEntrySize,
 }
 
 impl fmt::Display for ElfError {
@@ -40,6 +41,10 @@ impl fmt::Display for ElfError {
 
             ElfError::InvalidStringOffset => {
                 write!(f, "invalid string offset")
+            }
+
+            ElfError::InvalidEntrySize => {
+                write!(f, "invalid entry size")
             }
         }
     }

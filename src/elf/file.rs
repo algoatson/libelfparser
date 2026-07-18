@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use super::header::{ElfHeader, ElfProgramHeader, ElfSegment, ElfSectionHeader, ElfSection, ElfSymbol};
-use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr};
+use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr, Elf32_Sym, Elf64_Sym};
 use super::enums::SectionType;
 use super::constants::SHN_XINDEX;
 use super::error::ElfError;
@@ -28,7 +28,8 @@ pub struct ElfFile<'a> {
     bytes: &'a [u8],
     elf_hdr: ElfHeader,
     prog_hdrs: Vec<ElfSegment<'a>>,
-    sect_hdrs: Vec<ElfSection<'a>>
+    sect_hdrs: Vec<ElfSection<'a>>,
+    symbols: Vec<ElfSymbol<'a>>
 }
 
 impl<'a> ElfFile<'a> {
@@ -42,6 +43,10 @@ impl<'a> ElfFile<'a> {
 
     pub fn sections(&self) -> &[ElfSection<'a>] {
         &self.sect_hdrs
+    }
+
+    pub fn symbols(&self) -> &[ElfSymbol<'a>] {
+        &self.symbols
     }
 
     pub fn parse(bytes: &'a[u8]) -> Result<Self, ElfError> {
@@ -154,11 +159,54 @@ impl<'a> ElfFile<'a> {
             section.set_name(name);
         }
 
+        // for every section
+        // if type == SYMTAB or DYNSYM
+        //     locate linked string table (sh_link)
+        //     iterate every Elf*_Sym
+        //     resolve st_name
+        //     push ElfSymbol
+
+        let mut symbols = Vec::new();
+
+        for section in &sections {
+            match section.section_type() {
+                SectionType::SymbolTable | SectionType::DynSym => {
+                    let string_table = sections
+                        .get(section.link() as usize)
+                        .ok_or(ElfError::InvalidSectionIndex)?;
+
+                    // iterate over symbols
+                    let section_data = section.data();
+                    let entsize = section.entry_size() as usize;
+
+                    // validate entry size
+                    if entsize == 0 {
+                        return Err(ElfError::InvalidEntrySize);
+                    }
+
+                    for chunk in section_data.chunks_exact(entsize) {
+                        let raw = Elf32_Sym::from_bytes(chunk)?;
+
+                        let name = get_string(
+                            string_table.data(),
+                            raw.st_name,
+                        ).ok();
+
+                        symbols.push(ElfSymbol::from(&raw, name));
+                    }
+
+                }
+
+                _ => {}
+            }
+        }
+
         Ok(Self {
             bytes,
             elf_hdr: header,
             prog_hdrs: segments,
             sect_hdrs: sections,
+            symbols: symbols,
         })
     }
 
@@ -251,12 +299,51 @@ impl<'a> ElfFile<'a> {
         }
 
         // next step is to resolve symbols.
+        let mut symbols = Vec::new();
+
+        for section in &sections {
+            match section.section_type() {
+                SectionType::SymbolTable | SectionType::DynSym => {
+                    // locate linked string table (sh_link)
+                    let string_table = sections
+                        .get(section.link() as usize)
+                        .ok_or(ElfError::InvalidSectionIndex)?;
+
+                    // iterate over symbols
+                    let section_data = section.data();
+                    let entsize = section.entry_size() as usize;
+                    
+                    // validate entry size
+                    if entsize == 0 {
+                        return Err(ElfError::InvalidEntrySize);
+                    }
+
+                    // iterate every Elf64_Sym
+                    for chunk in section_data.chunks_exact(entsize) {
+                        let raw = Elf64_Sym::from_bytes(chunk)?;
+
+                        // resolve st_name
+                        let name = get_string(
+                            string_table.data(),
+                            raw.st_name,
+                        ).ok();
+
+                        // push ElfSymbol
+                        symbols.push(ElfSymbol::from(&raw, name));
+                    }
+
+                }
+
+                _ => {}
+            }
+        }
 
         Ok(Self {
             bytes,
             elf_hdr: header,
             prog_hdrs: segments,
             sect_hdrs: sections,
+            symbols: symbols,
         })
     }
 }

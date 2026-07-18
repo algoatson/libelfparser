@@ -161,6 +161,85 @@ pub struct Elf32_Sym {
     pub st_shndx: u16,
 }
 
+impl Elf32_Sym {
+    pub(crate) fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        read_struct(bytes)
+    }
+}
+
+impl Elf64_Sym {
+    pub(crate) fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        read_struct(bytes)
+    }
+}
+
+pub trait RawProgramHeader {
+    // Required
+    fn p_type(&self) -> u32;
+    fn p_offset(&self) -> u64;
+    fn p_vaddr(&self) -> u64;
+    fn p_paddr(&self) -> u64;
+    fn p_filesz(&self) -> u64;
+    fn p_memsz(&self) -> u64;
+    fn p_flags(&self) -> u32;
+    fn p_align(&self) -> u64;
+
+    // Default implementations
+    fn segment_type(&self) -> SegmentType {
+        SegmentType::from(self.p_type())
+    }
+
+    fn file_offset(&self) -> u64 {
+        self.p_offset()
+    }
+
+    fn virtual_address(&self) -> u64 {
+        self.p_vaddr()
+    }
+
+    fn physical_address(&self) -> u64 {
+        self.p_paddr()
+    }
+
+    fn file_size(&self) -> u64 {
+        self.p_filesz()
+    }
+
+    fn memory_size(&self) -> u64 {
+        self.p_memsz()
+    }
+
+    fn flags(&self) -> SegmentFlags {
+        SegmentFlags::from(self.p_flags())
+    }
+
+    fn alignment(&self) -> u64 {
+        self.p_align()
+    }
+}
+
+impl RawProgramHeader for Elf32_Phdr {
+    fn p_type(&self) -> u32 { self.p_type }
+    fn p_offset(&self) -> u64 { self.p_offset as u64 }
+    fn p_vaddr(&self) -> u64 { self.p_vaddr as u64 }
+    fn p_paddr(&self) -> u64 { self.p_paddr as u64 }
+    fn p_filesz(&self) -> u64 { self.p_filesz as u64 }
+    fn p_memsz(&self) -> u64 { self.p_memsz as u64 }
+    fn p_flags(&self) -> u32 { self.p_flags }
+    fn p_align(&self) -> u64 { self.p_align as u64 }
+}
+
+impl RawProgramHeader for Elf64_Phdr {
+    fn p_type(&self) -> u32 { self.p_type }
+    fn p_offset(&self) -> u64 { self.p_offset as u64 }
+    fn p_vaddr(&self) -> u64 { self.p_vaddr as u64 }
+    fn p_paddr(&self) -> u64 { self.p_paddr as u64 }
+    fn p_filesz(&self) -> u64 { self.p_filesz as u64 }
+    fn p_memsz(&self) -> u64 { self.p_memsz as u64 }
+    fn p_flags(&self) -> u32 { self.p_flags }
+    fn p_align(&self) -> u64 { self.p_align as u64 }
+}
+
 pub trait RawSectionHeader {
     fn name_offset(&self) -> u32;
     fn section_type(&self) -> SectionType;

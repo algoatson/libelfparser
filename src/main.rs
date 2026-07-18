@@ -1,91 +1,103 @@
-use std::fs;
+use std::{env, fs};
 
-use clap::Parser;
+use colored::*;
 use comfy_table::{
     presets::UTF8_FULL,
+    ContentArrangement,
     Table,
 };
 
-use owo_colors::OwoColorize;
-
-use libelfctf::elf::ElfFile;
-
-
-#[derive(Parser)]
-#[command(
-    name="elfparser",
-    about="A Rust ELF inspection tool"
-)]
-struct Args {
-
-    /// ELF file to inspect
-    file: String,
-
-}
-
+use libelfparser::elf::{
+    ElfFile,
+    SectionType,
+    SymbolType,
+};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-    let args = Args::parse();
+    let path = env::args()
+        .nth(1)
+        .expect("usage: elfinspect <file>");
 
-    let bytes = fs::read(&args.file)?;
+    let bytes = fs::read(&path)?;
 
     let elf = ElfFile::parse(&bytes)?;
 
-
     println!();
-    println!("{}", "╭──────────────────────────────╮".cyan());
-    println!("{}", "│          ELF FILE            │".cyan());
-    println!("{}", "╰──────────────────────────────╯".cyan());
-    println!();
-
-
-    let header = elf.header();
-
+    println!(
+        "{} {}",
+        "ELF Parser".bright_cyan().bold(),
+        "v0.1".dimmed()
+    );
 
     println!(
         "{} {}",
         "File:".bold(),
-        args.file
+        path.yellow()
     );
-
-    println!(
-        "{} {} bytes",
-        "Size:".bold(),
-        bytes.len()
-    );
-
-    println!();
-
-
-    println!(
-        "{} {} {} {}",
-        format!("{:?}", header.class()).green(),
-        format!("{:?}", header.machine()).green(),
-        format!("{:?}", header.endianness()).green(),
-        format!("{:?}", header.file_type()).green(),
-    );
-
-
-    println!(
-        "{} 0x{:x}",
-        "Entry:".bold(),
-        header.entry()
-    );
-
-
-    println!();
 
 
     //
-    // PROGRAM HEADERS
+    // ELF HEADER
     //
+    println!();
+    println!("{}", "ELF Header".bright_green().bold());
 
-    println!("{}", "PROGRAM HEADERS".yellow().bold());
+    let header = elf.header();
 
     let mut table = Table::new();
 
-    table.load_preset(UTF8_FULL);
+    table
+        .load_preset(UTF8_FULL)
+        .set_content_arrangement(ContentArrangement::Dynamic);
+
+    table.set_header(vec![
+        "Field",
+        "Value",
+    ]);
+
+    table.add_row(vec![
+        "Class",
+        &format!("{:?}", header.class()),
+    ]);
+
+    table.add_row(vec![
+        "Endian",
+        &format!("{:?}", header.endianness()),
+    ]);
+
+    table.add_row(vec![
+        "Type",
+        &format!("{:?}", header.file_type()),
+    ]);
+
+    table.add_row(vec![
+        "Machine",
+        &format!("{:?}", header.machine()),
+    ]);
+
+    table.add_row(vec![
+        "Entry",
+        &format!("0x{:x}", header.entry()),
+    ]);
+
+    println!("{table}");
+
+
+
+    //
+    // SEGMENTS
+    //
+    println!();
+    println!("{}", "Program Headers".bright_green().bold());
+
+
+    let mut table = Table::new();
+
+    table
+        .load_preset(UTF8_FULL)
+        .set_content_arrangement(ContentArrangement::Dynamic);
+
 
     table.set_header(vec![
         "#",
@@ -93,41 +105,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Offset",
         "Virt Addr",
         "File Size",
-        "Memory",
+        "Mem Size",
         "Flags",
     ]);
 
 
-    for (i, segment) in elf.segments().iter().enumerate() {
+    for (i, seg) in elf.segments().iter().enumerate() {
 
         table.add_row(vec![
             i.to_string(),
-            format!("{:?}", segment.segment_type()),
-            format!("0x{:x}", segment.file_offset()),
-            format!("0x{:x}", segment.virtual_address()),
-            segment.file_size().to_string(),
-            segment.memory_size().to_string(),
-            format!("{}", segment.flags()),
+            format!("{:?}", seg.segment_type()),
+            format!("0x{:x}", seg.file_offset()),
+            format!("0x{:x}", seg.virtual_address()),
+            seg.file_size().to_string(),
+            seg.memory_size().to_string(),
+            format!("{:?}", seg.flags()),
         ]);
-
     }
 
 
-    println!("{}", table);
+    println!("{table}");
 
-    println!();
 
 
     //
     // SECTIONS
     //
-
-    println!("{}", "SECTIONS".yellow().bold());
+    println!();
+    println!("{}", "Section Headers".bright_green().bold());
 
 
     let mut table = Table::new();
 
-    table.load_preset(UTF8_FULL);
+    table
+        .load_preset(UTF8_FULL)
+        .set_content_arrangement(ContentArrangement::Dynamic);
 
 
     table.set_header(vec![
@@ -137,7 +149,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Address",
         "Offset",
         "Size",
-        "Flags",
     ]);
 
 
@@ -153,30 +164,70 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             format!("{:?}", section.section_type()),
 
-            format!("0x{:x}",
-                section.virtual_address()),
+            format!(
+                "0x{:x}",
+                section.virtual_address()
+            ),
 
-            format!("0x{:x}",
-                section.file_offset()),
+            format!(
+                "0x{:x}",
+                section.file_offset()
+            ),
 
             section.size().to_string(),
-
-            format!("{:?}",
-                section.flags()),
         ]);
-
     }
 
 
-    println!("{}", table);
+    println!("{table}");
 
 
+
+    //
+    // SYMBOLS
+    //
     println!();
-    println!(
-        "{} parsed successfully",
-        "✓".green()
-    );
+    println!("{}", "Symbols".bright_green().bold());
 
+
+    let mut table = Table::new();
+
+    table
+        .load_preset(UTF8_FULL)
+        .set_content_arrangement(ContentArrangement::Dynamic);
+
+
+    table.set_header(vec![
+        "#",
+        "Name",
+        "Type",
+        "Binding",
+        "Value",
+        "Size",
+    ]);
+
+
+    for (i, sym) in elf.symbols().iter().enumerate() {
+
+        table.add_row(vec![
+            i.to_string(),
+
+            sym.name()
+                .unwrap_or("<unknown>")
+                .to_string(),
+
+            format!("{:?}", sym.symbol_type()),
+
+            format!("{:?}", sym.binding()),
+
+            format!("0x{:x}", sym.value()),
+
+            sym.size().to_string(),
+        ]);
+    }
+
+
+    println!("{table}");
 
     Ok(())
 }

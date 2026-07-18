@@ -1,5 +1,5 @@
 use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags, SymbolBinding, SymbolType};
-use super::raw::{RawSectionHeader, RawSymbol};
+use super::raw::{RawProgramHeader, RawSectionHeader, RawSymbol};
 
 pub struct ElfHeader {
     magic: [u8; 4],
@@ -164,6 +164,24 @@ pub struct ElfProgramHeader {
 }
 
 impl ElfProgramHeader {
+    pub(crate) fn from<T: RawProgramHeader>(raw: &T) -> Self {
+        Self {
+            segment_type: raw.segment_type(),
+            
+            file_offset: raw.file_offset(),
+
+            virt_address: raw.virtual_address(),
+            phys_address: raw.physical_address(),
+
+            file_size: raw.file_size(),
+            memory_size: raw.memory_size(),
+
+            flags: raw.flags(),
+
+            alignment: raw.alignment(),
+        }
+    }
+
     pub(crate) fn from_32(raw: &crate::elf::raw::Elf32_Phdr) -> Self {
         Self {
             segment_type: SegmentType::from(raw.p_type),
@@ -460,11 +478,14 @@ pub struct ElfSymbol<'a> {
 }
 
 impl<'a> ElfSymbol<'a> {
-    pub(crate) fn from<T: RawSymbol>(raw: &T) -> Self {
+    pub(crate) fn from<T: RawSymbol>(
+        raw: &T, 
+        name: Option<&'a str>
+    ) -> Self {
         let info = raw.info();
 
         Self {
-            name: None,
+            name,
             value: raw.value() as u64,
             size: raw.size() as u64,
             binding: SymbolBinding::from(info >> 4),
