@@ -202,7 +202,7 @@ Currently supported:
 | Section Headers | ✅ |
 | Section Names | ✅ |
 | Symbols | ✅ |
-| Relocations | 🚧 |
+| Relocations | ✅ |
 | Dynamic Linking | 🚧 |
 | DWARF | ⬜ |
 
