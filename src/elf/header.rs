@@ -429,6 +429,13 @@ impl<'a> ElfSection<'a> {
         self.name = Some(name);
     }
 
+    pub fn linked_section<'b>(
+        &self,
+        sections: &'b [ElfSection<'a>]
+    ) -> Option<&'b ElfSection<'a>> {
+        sections.get(self.link() as usize)
+    }
+
     // forwarder functions
 
     pub fn name_offset(&self) -> u32 {
@@ -492,5 +499,29 @@ impl<'a> ElfSymbol<'a> {
             symbol_type: SymbolType::from(info & 0xf),
             section_index: raw.section_index() as u32,
         }
+    }
+
+    pub fn name(&self) -> Option<&'a str> {
+        self.name
+    }
+
+    pub fn value(&self) -> u64 {
+        self.value
+    }
+
+    pub fn size(&self) -> u64 {
+        self.size
+    }
+
+    pub fn binding(&self) -> SymbolBinding {
+        self.binding
+    }
+
+    pub fn symbol_type(&self) -> SymbolType {
+        self.symbol_type
+    }
+
+    pub fn section_index(&self) -> u32 {
+        self.section_index
     }
 }

@@ -7,7 +7,7 @@ use comfy_table::{
     Table,
 };
 
-use libelfparser::elf::{
+use libelfctf::elf::{
     ElfFile,
     SectionType,
     SymbolType,
