@@ -229,5 +229,102 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("{table}");
 
+        //
+    // RELOCATIONS
+    //
+    println!();
+    println!("{}", "Relocations".bright_green().bold());
+
+
+    if elf.relocations().is_empty() {
+
+        println!(
+            "{}",
+            "No relocation sections found.".dimmed()
+        );
+
+    } else {
+
+
+        for (section_index, relocation_section) 
+            in elf.relocations().iter().enumerate() {
+
+
+            let section_name = relocation_section
+                .section(elf.sections())
+                .and_then(|s| s.name())
+                .unwrap_or("<unknown>");
+
+
+            println!();
+            println!(
+                "{} {}",
+                format!("[{}]", section_index)
+                    .bright_yellow()
+                    .bold(),
+
+                section_name
+                    .bright_cyan()
+            );
+
+
+            let mut table = Table::new();
+
+
+            table
+                .load_preset(UTF8_FULL)
+                .set_content_arrangement(ContentArrangement::Dynamic);
+
+
+
+            table.set_header(vec![
+                "#",
+                "Offset",
+                "Type",
+                "Symbol",
+                "Addend",
+            ]);
+
+
+
+            for (i, reloc) 
+                in relocation_section.relocations()
+                    .iter()
+                    .enumerate()
+            {
+
+
+                table.add_row(vec![
+
+                    i.to_string(),
+
+                    format!(
+                        "0x{:x}",
+                        reloc.offset()
+                    ),
+
+
+                    format!(
+                        "{:?}",
+                        reloc.relocation_type()
+                    ),
+
+
+                    reloc.symbol_index()
+                        .to_string(),
+
+
+                    reloc.addend()
+                        .map(|x| x.to_string())
+                        .unwrap_or_else(|| "-".into()),
+
+                ]);
+            }
+
+
+            println!("{table}");
+        }
+    }
+
     Ok(())
 }

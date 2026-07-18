@@ -17,6 +17,7 @@ pub use enums::{
     Machine,
     FileType,
     SegmentType,
+    SegmentFlags,
     SectionType,
     SymbolBinding,
     SymbolType

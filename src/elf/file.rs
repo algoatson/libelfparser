@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
 use super::header::{ElfHeader, ElfProgramHeader, ElfSegment, ElfSectionHeader, ElfSection, ElfSymbol};
-use super::relocation::ElfRelocation;
-use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr, Elf32_Sym, Elf64_Sym};
+use super::relocation::{ElfRelocation, ElfRelocationSection};
+use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr, Elf32_Sym, Elf64_Sym, Elf32_Rel, Elf32_Rela, Elf64_Rel, Elf64_Rela};
 use super::enums::SectionType;
 use super::constants::SHN_XINDEX;
 use super::error::ElfError;
@@ -31,7 +31,7 @@ pub struct ElfFile<'a> {
     segments: Vec<ElfSegment<'a>>,
     sections: Vec<ElfSection<'a>>,
     symbols: Vec<ElfSymbol<'a>>,
-    relocations: Vec<ElfRelocation>,
+    relocations: Vec<ElfRelocationSection>,
 }
 
 impl<'a> ElfFile<'a> {
@@ -49,6 +49,10 @@ impl<'a> ElfFile<'a> {
 
     pub fn symbols(&self) -> &[ElfSymbol<'a>] {
         &self.symbols
+    }
+
+    pub fn relocations(&self) -> &[ElfRelocationSection] {
+        &self.relocations
     }
 
     pub fn sections_by_type(
@@ -212,7 +216,52 @@ impl<'a> ElfFile<'a> {
             }
         }
 
-        let mut relocations = Vec::new();
+        let mut relocation_sections = Vec::new();
+
+        // next step is to resolve relocations
+        for (index, section) in sections.iter().enumerate() {
+            match section.section_type() {
+                SectionType::Rela => {
+                    let mut relocations = Vec::new();
+                
+                    for chunk in section.data().chunks_exact(section.entry_size() as usize) {
+                        let raw = Elf32_Rela::from_bytes(chunk)?;
+                    
+                        relocations.push(
+                            ElfRelocation::from(&raw)
+                        );
+                    }
+                
+                    relocation_sections.push(
+                        ElfRelocationSection::new(
+                            index,
+                            relocations,
+                        )
+                    );
+                }
+            
+                SectionType::Rel => {
+                    let mut relocations = Vec::new();
+                
+                    for chunk in section.data().chunks_exact(section.entry_size() as usize) {
+                        let raw = Elf32_Rel::from_bytes(chunk)?;
+                    
+                        relocations.push(
+                            ElfRelocation::from(&raw)
+                        );
+                    }
+                
+                    relocation_sections.push(
+                        ElfRelocationSection::new(
+                            index,
+                            relocations,
+                        )
+                    );
+                }
+            
+                _ => {}
+            }
+        }
 
         Ok(Self {
             bytes,
@@ -220,7 +269,7 @@ impl<'a> ElfFile<'a> {
             segments,
             sections,
             symbols,
-            relocations
+            relocations: relocation_sections
         })
     }
 
@@ -355,22 +404,49 @@ impl<'a> ElfFile<'a> {
         // i could probably merge match block, however
         // im not too certain about this.
 
-        let mut relocations = Vec::new();
+        let mut relocation_sections = Vec::new();
 
         // next step is to resolve relocations
-        for section in &sections {
+        for (index, section) in sections.iter().enumerate() {
             match section.section_type() {
                 SectionType::Rela => {
-                    let symtab = sections
-                        .get(section.link() as usize)
-                        .ok_or(ElfError::InvalidSectionIndex)?;
-
-                    // parse_relocations(
-                    //     section,
-                    //     symtab,
-                    // );
+                    let mut relocations = Vec::new();
+                
+                    for chunk in section.data().chunks_exact(section.entry_size() as usize) {
+                        let raw = Elf64_Rela::from_bytes(chunk)?;
+                    
+                        relocations.push(
+                            ElfRelocation::from(&raw)
+                        );
+                    }
+                
+                    relocation_sections.push(
+                        ElfRelocationSection::new(
+                            index,
+                            relocations,
+                        )
+                    );
                 }
-
+            
+                SectionType::Rel => {
+                    let mut relocations = Vec::new();
+                
+                    for chunk in section.data().chunks_exact(section.entry_size() as usize) {
+                        let raw = Elf64_Rel::from_bytes(chunk)?;
+                    
+                        relocations.push(
+                            ElfRelocation::from(&raw)
+                        );
+                    }
+                
+                    relocation_sections.push(
+                        ElfRelocationSection::new(
+                            index,
+                            relocations,
+                        )
+                    );
+                }
+            
                 _ => {}
             }
         }
@@ -381,7 +457,7 @@ impl<'a> ElfFile<'a> {
             segments,
             sections,
             symbols,
-            relocations
+            relocations: relocation_sections
         })
     }
 }

@@ -354,6 +354,7 @@ impl From<u8> for SymbolType {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RelocationType {
     X86_64_64,
     X86_64_PC32,
@@ -361,4 +362,18 @@ pub enum RelocationType {
     X86_64_JUMP_SLOT,
     Relative,
     Unknown(u32),
+}
+
+impl From<u32> for RelocationType {
+    fn from(value: u32) -> Self {
+        match value {
+            1  => RelocationType::X86_64_64,
+            2  => RelocationType::X86_64_PC32,
+            6  => RelocationType::X86_64_GLOB_DAT,
+            7  => RelocationType::X86_64_JUMP_SLOT,
+            8  => RelocationType::Relative,
+
+            other => RelocationType::Unknown(other),
+        }
+    }
 }
