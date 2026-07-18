@@ -201,7 +201,7 @@ Currently supported:
 | Load Segments | ✅ |
 | Section Headers | ✅ |
 | Section Names | ✅ |
-| Symbols | 🚧 |
+| Symbols | ✅ |
 | Relocations | 🚧 |
 | Dynamic Linking | 🚧 |
 | DWARF | ⬜ |
