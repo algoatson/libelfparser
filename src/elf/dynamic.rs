@@ -1,4 +1,5 @@
 use super::enums::DynamicTag;
+use super::error::ElfError;
 use super::header::ElfSection;
 use super::raw::RawDynamic;
 
@@ -57,3 +58,31 @@ impl ElfDynamicSection {
         sections.get(self.section_index as usize)
     }
 }
+
+pub fn parse_dynamic<'a, T>(
+    section_index: usize,
+    section: &'a ElfSection<'a>
+) -> Result<Option<ElfDynamicSection>, ElfError>
+where
+    T: RawDynamic {
+        let mut entries = Vec::new();
+        let entsize = section.entry_size() as usize;
+
+        if entsize == 0 {
+            return Err(ElfError::InvalidEntrySize);
+        }
+
+        for chunk in section.data().chunks_exact(entsize) {
+            let raw = T::from_bytes(chunk)?;
+
+            let entry = ElfDynamicEntry::from(&raw);
+
+            if entry.tag() == DynamicTag::Null {
+                break;
+            }
+
+            entries.push(entry);
+        }
+
+        Ok(Some(ElfDynamicSection::new(section_index, entries)))
+    }

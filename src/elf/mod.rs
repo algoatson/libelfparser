@@ -1,7 +1,9 @@
 pub mod header;
 pub mod file;
+pub mod symbols;
 pub mod relocation;
 pub mod dynamic;
+pub mod utility;
 
 mod raw;
 mod enums;

@@ -1,6 +1,8 @@
 use super::enums::RelocationType;
+use super::error::ElfError;
 use super::raw::RawRelocation;
-use super::header::{ElfSection, ElfSymbol, ElfDynamicEntry};
+use super::header::ElfSection;
+use super::symbols::ElfSymbol;
 
 pub struct ElfRelocation {
     offset: u64,
@@ -75,4 +77,31 @@ impl ElfRelocationSection {
     ) -> Option<&'a ElfSection<'a>> {
         sections.get(self.section_index as usize)
     }
+}
+
+pub fn parse_relocations<'a, T>(
+    section_index: usize,
+    sections: &'a [ElfSection<'a>]
+) -> Result<ElfRelocationSection, ElfError> 
+where 
+    T: RawRelocation {
+        let mut relocations = Vec::new();
+
+        let section = sections
+            .get(section_index)
+            .ok_or(ElfError::InvalidSectionIndex)?;
+
+        let entsize = section.entry_size() as usize;
+
+        if entsize == 0 {
+            return Err(ElfError::InvalidEntrySize);
+        }
+
+        for chunk in section.data().chunks_exact(entsize) {
+            let raw = T::from_bytes(chunk)?;
+
+            relocations.push(ElfRelocation::from(&raw));
+        }
+
+        Ok(ElfRelocationSection::new(section_index, relocations))
 }

@@ -324,7 +324,11 @@ impl RawSectionHeader for Elf64_Shdr {
 }
 
 pub trait RawSymbol {
-    fn name(&self) -> u32;
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError>
+    where
+        Self: Sized;
+
+    fn name_offset(&self) -> u32;
     fn value(&self) -> u64;
     fn size(&self) -> u64;
     fn info(&self) -> u8;
@@ -332,7 +336,11 @@ pub trait RawSymbol {
 }
 
 impl RawSymbol for Elf32_Sym {
-    fn name(&self) -> u32 {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf32_Sym::from_bytes(bytes)
+    }
+
+    fn name_offset(&self) -> u32 {
         self.st_name
     }
 
@@ -364,7 +372,11 @@ pub struct Elf64_Sym {
 }
 
 impl RawSymbol for Elf64_Sym {
-    fn name(&self) -> u32 {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf64_Sym::from_bytes(bytes)
+    }
+
+    fn name_offset(&self) -> u32 {
         self.st_name
     }
 
@@ -436,6 +448,10 @@ impl Elf64_Rela {
 }
 
 pub trait RawRelocation {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError>
+    where
+        Self: Sized;
+
     fn offset(&self) -> u64;
     
     fn info(&self) -> u64;
@@ -452,6 +468,10 @@ pub trait RawRelocation {
 }
 
 impl RawRelocation for Elf32_Rel {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf32_Rel::from_bytes(bytes)
+    }
+
     fn offset(&self) -> u64 {
         self.r_offset as u64
     }
@@ -466,6 +486,10 @@ impl RawRelocation for Elf32_Rel {
 }
 
 impl RawRelocation for Elf64_Rel {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf64_Rel::from_bytes(bytes)
+    }
+
     fn offset(&self) -> u64 {
         self.r_offset
     }
@@ -480,6 +504,10 @@ impl RawRelocation for Elf64_Rel {
 }
 
 impl RawRelocation for Elf32_Rela {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf32_Rela::from_bytes(bytes)
+    }
+
     fn offset(&self) -> u64 {
         self.r_offset as u64
     }
@@ -494,6 +522,10 @@ impl RawRelocation for Elf32_Rela {
 }
 
 impl RawRelocation for Elf64_Rela {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf64_Rela::from_bytes(bytes)
+    }
+
     fn offset(&self) -> u64 {
         self.r_offset
     }
@@ -520,11 +552,19 @@ pub struct Elf64_Dyn {
 }
 
 pub trait RawDynamic {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError>
+    where
+        Self: Sized;
+
     fn tag(&self) -> DynamicTag;
     fn value(&self) -> u64;
 }
 
 impl RawDynamic for Elf32_Dyn {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf32_Dyn::from_bytes(bytes)
+    }
+
     fn tag(&self) -> DynamicTag {
         DynamicTag::from(self.d_tag as i64)
     }
@@ -535,6 +575,10 @@ impl RawDynamic for Elf32_Dyn {
 }
 
 impl RawDynamic for Elf64_Dyn {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf64_Dyn::from_bytes(bytes)
+    }
+
     fn tag(&self) -> DynamicTag {
         DynamicTag::from(self.d_tag)
     }
