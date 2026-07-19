@@ -61,7 +61,7 @@ impl ElfDynamicSection {
 
 pub fn parse_dynamic<'a, T>(
     section_index: usize,
-    section: &'a ElfSection<'a>
+    section: &ElfSection<'a>
 ) -> Result<Option<ElfDynamicSection>, ElfError>
 where
     T: RawDynamic {

@@ -81,7 +81,7 @@ impl ElfRelocationSection {
 
 pub fn parse_relocations<'a, T>(
     section_index: usize,
-    sections: &'a [ElfSection<'a>]
+    sections: &[ElfSection<'a>]
 ) -> Result<ElfRelocationSection, ElfError> 
 where 
     T: RawRelocation {
