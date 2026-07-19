@@ -189,121 +189,45 @@ impl<'a> ElfFile<'a> {
         //     push ElfSymbol
 
         let mut symbols = Vec::new();
-
-        for section in &sections {
-            match section.section_type() {
-                SectionType::SymbolTable | SectionType::DynSym => {
-                    let string_table = sections
-                        .get(section.link() as usize)
-                        .ok_or(ElfError::InvalidSectionIndex)?;
-
-                    // iterate over symbols
-                    let section_data = section.data();
-                    let entsize = section.entry_size() as usize;
-
-                    // validate entry size
-                    if entsize == 0 {
-                        return Err(ElfError::InvalidEntrySize);
-                    }
-
-                    for chunk in section_data.chunks_exact(entsize) {
-                        let raw = Elf32_Sym::from_bytes(chunk)?;
-
-                        let name = get_string(
-                            string_table.data(),
-                            raw.st_name,
-                        ).ok();
-
-                        symbols.push(ElfSymbol::from(&raw, name));
-                    }
-
-                }
-
-                _ => {}
-            }
-        }
-
         let mut relocation_sections = Vec::new();
-
-        // next step is to resolve relocations
-        for (index, section) in sections.iter().enumerate() {
-            match section.section_type() {
-                SectionType::Rela => {
-                    let mut relocations = Vec::new();
-                
-                    for chunk in section.data().chunks_exact(section.entry_size() as usize) {
-                        let raw = Elf32_Rela::from_bytes(chunk)?;
-                    
-                        relocations.push(
-                            ElfRelocation::from(&raw)
-                        );
-                    }
-                
-                    relocation_sections.push(
-                        ElfRelocationSection::new(
-                            index,
-                            relocations,
-                        )
-                    );
-                }
-            
-                SectionType::Rel => {
-                    let mut relocations = Vec::new();
-                
-                    for chunk in section.data().chunks_exact(section.entry_size() as usize) {
-                        let raw = Elf32_Rel::from_bytes(chunk)?;
-                    
-                        relocations.push(
-                            ElfRelocation::from(&raw)
-                        );
-                    }
-                
-                    relocation_sections.push(
-                        ElfRelocationSection::new(
-                            index,
-                            relocations,
-                        )
-                    );
-                }
-            
-                _ => {}
-            }
-        }
-
         let mut dynamic: Option<ElfDynamicSection> = None;
 
         for (index, section) in sections.iter().enumerate() {
-            if section.section_type() != SectionType::Dynamic {
-                continue;
-            }
-
-            let mut entries = Vec::new();
-            let entsize = section.entry_size() as usize;
-
-            if entsize == 0 {
-                return Err(ElfError::InvalidEntrySize);
-            }
-
-            for chunk in section.data().chunks_exact(entsize) {
-                let raw = Elf64_Dyn::from_bytes(chunk)?;
-
-                let entry = ElfDynamicEntry::from(&raw);
-
-                // dynamic table is terminated by DT_NULL
-                if entry.tag() == DynamicTag::Null {
-                    break;
+            match section.section_type() {
+                // parse symbols
+                SectionType::SymbolTable | SectionType::DynSym => {
+                    symbols = match
+                        parse_symbols::<Elf64_Sym>(index, &sections) {
+                            Ok(value) => value,
+                            Err(e) => return Err(e),
+                        }
                 }
 
-                entries.push(entry);
+                SectionType::Dynamic => {
+                    dynamic = match parse_dynamic::<Elf64_Dyn>(index, &section) {
+                        Ok(value) => value,
+                        Err(e) => return Err(e), 
+                    };
+                }
+
+                SectionType::Rel => {
+                    let x = parse_relocations::<Elf64_Rel>(index, &sections);
+                    match x {
+                        Ok(value) => relocation_sections.push(value),
+                        Err(e) => return Err(e),
+                    }
+                }
+
+                SectionType::Rela => {
+                    let x = parse_relocations::<Elf64_Rela>(index, &sections);
+                    match x {
+                        Ok(value) => relocation_sections.push(value),
+                        Err(e) => return Err(e),
+                    }
+                }
+
+                _ => {}
             }
-
-            dynamic = Some(
-                ElfDynamicSection::new(index, entries)
-            );
-
-            break;
-
-
         }
 
         Ok(Self {
