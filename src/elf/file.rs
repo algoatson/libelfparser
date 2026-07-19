@@ -350,6 +350,7 @@ impl<'a> ElfFile<'a> {
                     );
                 }
 
+                // parse dynamic section
                 SectionType::Dynamic => {
                     dynamic = match parse_dynamic::<Elf64_Dyn>(index, &section) {
                         Ok(value) => value,
@@ -357,6 +358,7 @@ impl<'a> ElfFile<'a> {
                     };
                 }
 
+                // parse relocations
                 SectionType::Rel => {
                     relocation_sections.extend(
                         parse_relocations::<Elf64_Rel>(
@@ -366,6 +368,7 @@ impl<'a> ElfFile<'a> {
                     );
                 }
 
+                // parse relocations
                 SectionType::Rela => {
                     relocation_sections.extend(
                         parse_relocations::<Elf64_Rela>(
@@ -378,9 +381,6 @@ impl<'a> ElfFile<'a> {
                 _ => {}
             }
         }
-
-        // i could probably merge match block, however
-        // im not too certain about this.
 
         Ok(Self {
             bytes,
