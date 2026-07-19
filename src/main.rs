@@ -15,9 +15,7 @@ use libelfctf::elf::{
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-    let path = env::args()
-        .nth(1)
-        .expect("usage: elfinspect <file>");
+    let path = "/bin/cat";
 
     let bytes = fs::read(&path)?;
 
@@ -229,7 +227,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("{table}");
 
-        //
+    //
     // RELOCATIONS
     //
     println!();
@@ -246,6 +244,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
 
 
+        // for each relocation section
         for (section_index, relocation_section) 
             in elf.relocations().iter().enumerate() {
 

@@ -1,6 +1,6 @@
 use super::enums::RelocationType;
 use super::raw::RawRelocation;
-use super::header::{ElfSection, ElfSectionHeader, ElfSymbol};
+use super::header::{ElfSection, ElfSymbol, ElfDynamicEntry};
 
 pub struct ElfRelocation {
     offset: u64,

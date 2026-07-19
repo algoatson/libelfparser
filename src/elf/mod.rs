@@ -1,6 +1,7 @@
 pub mod header;
 pub mod file;
 pub mod relocation;
+pub mod dynamic;
 
 mod raw;
 mod enums;

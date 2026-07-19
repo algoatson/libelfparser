@@ -2,8 +2,9 @@ use std::marker::PhantomData;
 
 use super::header::{ElfHeader, ElfProgramHeader, ElfSegment, ElfSectionHeader, ElfSection, ElfSymbol};
 use super::relocation::{ElfRelocation, ElfRelocationSection};
-use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr, Elf32_Sym, Elf64_Sym, Elf32_Rel, Elf32_Rela, Elf64_Rel, Elf64_Rela};
-use super::enums::SectionType;
+use super::dynamic::{ElfDynamicEntry, ElfDynamicSection};
+use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr, Elf32_Sym, Elf64_Sym, Elf32_Rel, Elf32_Rela, Elf64_Rel, Elf64_Rela, Elf32_Dyn, Elf64_Dyn};
+use super::enums::{DynamicTag, SectionType};
 use super::constants::SHN_XINDEX;
 use super::error::ElfError;
 
@@ -32,6 +33,7 @@ pub struct ElfFile<'a> {
     sections: Vec<ElfSection<'a>>,
     symbols: Vec<ElfSymbol<'a>>,
     relocations: Vec<ElfRelocationSection>,
+    dynamic: Option<ElfDynamicSection>
 }
 
 impl<'a> ElfFile<'a> {
@@ -451,13 +453,50 @@ impl<'a> ElfFile<'a> {
             }
         }
 
+        let mut dynamic: Option<ElfDynamicSection> = None;
+
+        for (index, section) in sections.iter().enumerate() {
+            if section.section_type() != SectionType::Dynamic {
+                continue;
+            }
+
+            let mut entries = Vec::new();
+            let entsize = section.entry_size() as usize;
+
+            if entsize == 0 {
+                return Err(ElfError::InvalidEntrySize);
+            }
+
+            for chunk in section.data().chunks_exact(entsize) {
+                let raw = Elf64_Dyn::from_bytes(chunk)?;
+
+                let entry = ElfDynamicEntry::from(&raw);
+
+                // dynamic table is terminated by DT_NULL
+                if entry.tag() == DynamicTag::Null {
+                    break;
+                }
+
+                entries.push(entry);
+            }
+
+            dynamic = Some(
+                ElfDynamicSection::new(index, entries)
+            );
+
+            break;
+
+
+        }
+
         Ok(Self {
             bytes,
             header,
             segments,
             sections,
             symbols,
-            relocations: relocation_sections
+            relocations: relocation_sections,
+            dynamic
         })
     }
 }

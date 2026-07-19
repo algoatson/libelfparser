@@ -1,4 +1,4 @@
-use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags, SymbolBinding, SymbolType, RelocationType};
+use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags, SymbolBinding, SymbolType, RelocationType, DynamicTag};
 use super::error::ElfError;
 
 pub(crate) fn read_struct<T>(bytes: &[u8]) -> Result<T, ElfError> {
@@ -84,20 +84,6 @@ pub(crate) struct Elf64_Phdr {
     pub p_memsz: u64,
     pub p_align: u64,
 }
-
-// this one uses the old version for demonstration,
-// im trying to fully understand whats going on
-// so im leaving it here for now until i understand
-// everything that is happening.
-// impl Elf32_Phdr {
-//     pub(crate) fn from_bytes(bytes: &[u8]) -> &Self {
-//         assert!(bytes.len() >= std::mem::size_of::<Self>());
-
-//         unsafe {
-//             &*(bytes.as_ptr() as *const Self)
-//         }
-//     }
-// }
 
 impl Elf32_Phdr {
     pub(crate) fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
@@ -518,5 +504,54 @@ impl RawRelocation for Elf64_Rela {
 
     fn addend(&self) -> Option<i64> {
         Some(self.r_addend)
+    }
+}
+
+#[repr(C)]
+pub struct Elf32_Dyn {
+    pub d_tag: i32,
+    pub d_un: u32,
+}
+
+#[repr(C)]
+pub struct Elf64_Dyn {
+    pub d_tag: i64,
+    pub d_un: u64,
+}
+
+pub trait RawDynamic {
+    fn tag(&self) -> DynamicTag;
+    fn value(&self) -> u64;
+}
+
+impl RawDynamic for Elf32_Dyn {
+    fn tag(&self) -> DynamicTag {
+        DynamicTag::from(self.d_tag as i64)
+    }
+
+    fn value(&self) -> u64 {
+        self.d_un as u64
+    }
+}
+
+impl RawDynamic for Elf64_Dyn {
+    fn tag(&self) -> DynamicTag {
+        DynamicTag::from(self.d_tag)
+    }
+
+    fn value(&self) -> u64 {
+        self.d_un
+    }
+}
+
+impl Elf32_Dyn {
+    pub(crate) fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        read_struct(bytes)
+    }
+}
+
+impl Elf64_Dyn {
+    pub(crate) fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        read_struct(bytes)
     }
 }

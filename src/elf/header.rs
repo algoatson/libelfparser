@@ -1,5 +1,5 @@
-use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags, SymbolBinding, SymbolType, RelocationType};
-use super::raw::{RawProgramHeader, RawSectionHeader, RawSymbol};
+use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags, SymbolBinding, SymbolType, RelocationType, DynamicTag};
+use super::raw::{RawProgramHeader, RawSectionHeader, RawSymbol, RawDynamic};
 
 pub struct ElfHeader {
     magic: [u8; 4],
@@ -523,5 +523,53 @@ impl<'a> ElfSymbol<'a> {
 
     pub fn section_index(&self) -> u32 {
         self.section_index
+    }
+}
+
+pub struct ElfDynamicEntry {
+    tag: DynamicTag,
+    value: u64,
+}
+
+impl ElfDynamicEntry {
+    pub(crate) fn from<T: RawDynamic>(
+        raw: &T
+    ) -> Self {
+        Self {
+            tag: raw.tag(),
+            value: raw.value(),
+        }
+    }
+}
+
+pub struct ElfDynamicSection {
+    section_index: usize,
+    entries: Vec<ElfDynamicEntry>,
+}
+
+impl ElfDynamicSection {
+    pub fn new(
+        section_index: usize,
+        entries: Vec<ElfDynamicEntry>
+    ) -> Self {
+        Self {
+            section_index,
+            entries,
+        }
+    }
+
+    pub fn entries(&self) -> &[ElfDynamicEntry] {
+        &self.entries
+    }
+
+    pub fn section_index(&self) -> usize {
+        self.section_index
+    }
+
+    pub fn section<'a> (
+        &self,
+        sections: &'a [ElfSection<'a>],
+    ) -> Option<&'a ElfSection<'a>> {
+        sections.get(self.section_index as usize)
     }
 }

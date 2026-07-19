@@ -250,6 +250,17 @@ pub enum SectionType {
     Rel,
     ShLib,
     DynSym,
+    InitArray,
+    FiniArray,
+    PreInitArray,
+    Relr,
+
+    // GNU extensions
+    GnuHash,
+    GnuVersionDefinitions,
+    GnuVersionRequirements,
+    GnuVersionSymbols,
+
     Unknown(u32),
 }
 
@@ -268,6 +279,15 @@ impl From<u32> for SectionType {
             9 => SectionType::Rel,
             10 => SectionType::ShLib,
             11 => SectionType::DynSym,
+            14 => SectionType::InitArray,
+            15 => SectionType::FiniArray,
+            16 => SectionType::PreInitArray,
+            19 => SectionType::Relr,
+            0x6ffffff6 => SectionType::GnuHash,
+            0x6ffffffd =>  SectionType::GnuVersionDefinitions,
+            0x6ffffffe => SectionType::GnuVersionRequirements,
+            0x6fffffff => SectionType::GnuVersionSymbols,
+            
             other => SectionType::Unknown(other),
         }
     }
@@ -384,6 +404,43 @@ impl From<u32> for RelocationType {
             9  => RelocationType::X86_64_GOTPCREL,
 
             other => RelocationType::Unknown(other),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DynamicTag {
+    Null,
+    Needed,
+    PltRelSz,
+    Hash,
+    StrTab,
+    SymTab,
+    Rela,
+    RelaSz,
+    RelaEnt,
+    Init,
+    Fini,
+    InitArray,
+    InitArraySz,
+    FiniArray,
+    FiniArraySz,
+
+    Unknown(i64),
+}
+
+impl From<i64> for DynamicTag {
+    fn from(value: i64) -> Self {
+        match value {
+            0 => Self::Null,
+            1 => Self::Needed,
+            5 => Self::StrTab,
+            6 => Self::SymTab,
+            7 => Self::Rela,
+            8 => Self::RelaSz,
+            12 => Self::Init,
+            13 => Self::Fini,
+            _ => Self::Unknown(value),
         }
     }
 }
