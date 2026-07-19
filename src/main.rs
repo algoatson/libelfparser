@@ -325,5 +325,66 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+        //
+    // DYNAMIC SECTION
+    //
+    println!();
+    println!("{}", "Dynamic Section".bright_green().bold());
+
+
+    match elf.dynamic() {
+
+        Some(dynamic) => {
+
+            let mut table = Table::new();
+
+            table
+                .load_preset(UTF8_FULL)
+                .set_content_arrangement(ContentArrangement::Dynamic);
+
+
+            table.set_header(vec![
+                "#",
+                "Tag",
+                "Value",
+            ]);
+
+
+            for (i, entry) in dynamic.entries()
+                .iter()
+                .enumerate()
+            {
+
+                table.add_row(vec![
+
+                    i.to_string(),
+
+                    format!(
+                        "{:?}",
+                        entry.tag()
+                    ),
+
+                    format!(
+                        "0x{:x}",
+                        entry.value()
+                    ),
+                ]);
+            }
+
+
+            println!("{table}");
+        }
+
+
+        None => {
+
+            println!(
+                "{}",
+                "No dynamic section found.".dimmed()
+            );
+
+        }
+    }
+
     Ok(())
 }

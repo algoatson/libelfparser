@@ -57,6 +57,10 @@ impl<'a> ElfFile<'a> {
         &self.relocations
     }
 
+    pub fn dynamic(&self) -> &Option<ElfDynamicSection> {
+        &self.dynamic
+    }
+
     pub fn sections_by_type(
         &self,
         ty: SectionType,
@@ -265,13 +269,50 @@ impl<'a> ElfFile<'a> {
             }
         }
 
+        let mut dynamic: Option<ElfDynamicSection> = None;
+
+        for (index, section) in sections.iter().enumerate() {
+            if section.section_type() != SectionType::Dynamic {
+                continue;
+            }
+
+            let mut entries = Vec::new();
+            let entsize = section.entry_size() as usize;
+
+            if entsize == 0 {
+                return Err(ElfError::InvalidEntrySize);
+            }
+
+            for chunk in section.data().chunks_exact(entsize) {
+                let raw = Elf64_Dyn::from_bytes(chunk)?;
+
+                let entry = ElfDynamicEntry::from(&raw);
+
+                // dynamic table is terminated by DT_NULL
+                if entry.tag() == DynamicTag::Null {
+                    break;
+                }
+
+                entries.push(entry);
+            }
+
+            dynamic = Some(
+                ElfDynamicSection::new(index, entries)
+            );
+
+            break;
+
+
+        }
+
         Ok(Self {
             bytes,
             header,
             segments,
             sections,
             symbols,
-            relocations: relocation_sections
+            relocations: relocation_sections,
+            dynamic
         })
     }
 

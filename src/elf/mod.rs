@@ -21,5 +21,6 @@ pub use enums::{
     SegmentFlags,
     SectionType,
     SymbolBinding,
-    SymbolType
+    SymbolType,
+    DynamicTag,
 };
