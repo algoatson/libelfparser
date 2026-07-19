@@ -1,11 +1,9 @@
-use std::marker::PhantomData;
-
 use super::header::{ElfHeader, ElfProgramHeader, ElfSegment, ElfSectionHeader, ElfSection};
 use super::symbols::{ElfSymbol, parse_symbols};
-use super::relocation::{ElfRelocation, ElfRelocationSection, parse_relocations};
-use super::dynamic::{ElfDynamicEntry, ElfDynamicSection, parse_dynamic};
+use super::relocation::{ElfRelocationSection, parse_relocations};
+use super::dynamic::{ElfDynamicSection, parse_dynamic};
 use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr, Elf32_Sym, Elf64_Sym, Elf32_Rel, Elf32_Rela, Elf64_Rel, Elf64_Rela, Elf32_Dyn, Elf64_Dyn};
-use super::enums::{DynamicTag, SectionType};
+use super::enums::{SectionType};
 use super::constants::SHN_XINDEX;
 use super::error::ElfError;
 
@@ -202,10 +200,10 @@ impl<'a> ElfFile<'a> {
                 }
 
                 SectionType::Dynamic => {
-                    dynamic = match parse_dynamic::<Elf32_Dyn>(index, &section) {
-                        Ok(value) => value,
-                        Err(e) => return Err(e), 
-                    };
+                    dynamic = parse_dynamic::<Elf32_Dyn>(
+                        index, 
+                        &section
+                    )?;
                 }
 
                 SectionType::Rel => {
@@ -352,10 +350,10 @@ impl<'a> ElfFile<'a> {
 
                 // parse dynamic section
                 SectionType::Dynamic => {
-                    dynamic = match parse_dynamic::<Elf64_Dyn>(index, &section) {
-                        Ok(value) => value,
-                        Err(e) => return Err(e), 
-                    };
+                    dynamic = parse_dynamic::<Elf64_Dyn>(
+                        index, 
+                        &section
+                    )?;
                 }
 
                 // parse relocations
