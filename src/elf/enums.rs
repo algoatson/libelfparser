@@ -356,22 +356,32 @@ impl From<u8> for SymbolType {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RelocationType {
+    X86_64_NONE,
     X86_64_64,
     X86_64_PC32,
+    X86_64_GOT32,
+    X86_64_PLT32,
+    X86_64_COPY,
     X86_64_GLOB_DAT,
     X86_64_JUMP_SLOT,
-    Relative,
+    X86_64_RELATIVE,
+    X86_64_GOTPCREL,
     Unknown(u32),
 }
 
 impl From<u32> for RelocationType {
     fn from(value: u32) -> Self {
         match value {
+            0  => RelocationType::X86_64_NONE,
             1  => RelocationType::X86_64_64,
             2  => RelocationType::X86_64_PC32,
+            3  => RelocationType::X86_64_GOT32,
+            4  => RelocationType::X86_64_PLT32,
+            5  => RelocationType::X86_64_COPY,
             6  => RelocationType::X86_64_GLOB_DAT,
             7  => RelocationType::X86_64_JUMP_SLOT,
-            8  => RelocationType::Relative,
+            8  => RelocationType::X86_64_RELATIVE,
+            9  => RelocationType::X86_64_GOTPCREL,
 
             other => RelocationType::Unknown(other),
         }
