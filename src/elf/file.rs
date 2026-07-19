@@ -197,12 +197,12 @@ impl<'a> ElfFile<'a> {
                 // parse symbols
                 SectionType::SymbolTable | SectionType::DynSym => {
                     symbols.extend(
-                        parse_symbols::<Elf64_Sym>(index, &sections)?
+                        parse_symbols::<Elf32_Sym>(index, &sections)?
                     );
                 }
 
                 SectionType::Dynamic => {
-                    dynamic = match parse_dynamic::<Elf64_Dyn>(index, &section) {
+                    dynamic = match parse_dynamic::<Elf32_Dyn>(index, &section) {
                         Ok(value) => value,
                         Err(e) => return Err(e), 
                     };
@@ -210,7 +210,7 @@ impl<'a> ElfFile<'a> {
 
                 SectionType::Rel => {
                     relocation_sections.extend(
-                        parse_relocations::<Elf64_Rel>(
+                        parse_relocations::<Elf32_Rel>(
                             index,
                             &sections
                         )
@@ -219,7 +219,7 @@ impl<'a> ElfFile<'a> {
 
                 SectionType::Rela => {
                     relocation_sections.extend(
-                        parse_relocations::<Elf64_Rela>(
+                        parse_relocations::<Elf32_Rela>(
                             index,
                             &sections
                         )
@@ -345,11 +345,9 @@ impl<'a> ElfFile<'a> {
             match section.section_type() {
                 // parse symbols
                 SectionType::SymbolTable | SectionType::DynSym => {
-                    symbols = match
-                        parse_symbols::<Elf64_Sym>(index, &sections) {
-                            Ok(value) => value,
-                            Err(e) => return Err(e),
-                        }
+                    symbols.extend(
+                        parse_symbols::<Elf64_Sym>(index, &sections)?
+                    );
                 }
 
                 SectionType::Dynamic => {
@@ -360,19 +358,21 @@ impl<'a> ElfFile<'a> {
                 }
 
                 SectionType::Rel => {
-                    let x = parse_relocations::<Elf64_Rel>(index, &sections);
-                    match x {
-                        Ok(value) => relocation_sections.push(value),
-                        Err(e) => return Err(e),
-                    }
+                    relocation_sections.extend(
+                        parse_relocations::<Elf64_Rel>(
+                            index,
+                            &sections
+                        )
+                    );
                 }
 
                 SectionType::Rela => {
-                    let x = parse_relocations::<Elf64_Rela>(index, &sections);
-                    match x {
-                        Ok(value) => relocation_sections.push(value),
-                        Err(e) => return Err(e),
-                    }
+                    relocation_sections.extend(
+                        parse_relocations::<Elf64_Rela>(
+                            index,
+                            &sections
+                        )
+                    );
                 }
 
                 _ => {}
