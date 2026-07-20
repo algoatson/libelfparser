@@ -2,7 +2,7 @@ use super::header::{ElfHeader, ElfProgramHeader, ElfSegment, ElfSectionHeader, E
 use super::symbols::{ElfSymbol, parse_symbols};
 use super::relocation::{ElfRelocationSection, parse_relocations};
 use super::dynamic::{ElfDynamicSection, parse_dynamic};
-use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr, Elf32_Sym, Elf64_Sym, Elf32_Rel, Elf32_Rela, Elf64_Rel, Elf64_Rela, Elf32_Dyn, Elf64_Dyn, RawElfHeader, RawProgramHeader, RawSectionHeader, ElfTypes};
+use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr, Elf32_Sym, Elf64_Sym, Elf32_Rel, Elf32_Rela, Elf64_Rel, Elf64_Rela, Elf32_Dyn, Elf64_Dyn, RawElfHeader, RawProgramHeader, RawSectionHeader, ElfTypes, Elf32Types, Elf64Types};
 use super::enums::{SectionType};
 use super::constants::SHN_XINDEX;
 use super::error::ElfError;
@@ -82,8 +82,8 @@ impl<'a> ElfFile<'a> {
         }
 
         match ident[4] {
-            1 => Self::parse_gen::<Elf32_Ehdr, Elf32_Phdr, Elf32_Shdr>(bytes),
-            2 => Self::parse_gen::<Elf64_Ehdr, Elf64_Phdr, Elf64_Shdr>(bytes),
+            1 => Self::parse_gen::<Elf32Types>(bytes),
+            2 => Self::parse_gen::<Elf64Types>(bytes),
             other => Err(ElfError::UnknownClass(other)),
         }
     }

@@ -843,7 +843,7 @@ pub trait ElfTypes {
     type Dynamic: RawDynamic;
 }
 
-struct Elf32Types;
+pub(crate) struct Elf32Types;
 
 impl ElfTypes for Elf32Types {
     type Header = Elf32_Ehdr;
@@ -855,7 +855,7 @@ impl ElfTypes for Elf32Types {
     type Dynamic = Elf32_Dyn;
 }
 
-struct Elf64Types;
+pub(crate) struct Elf64Types;
 
 impl ElfTypes for Elf64Types {
     type Header = Elf64_Ehdr;
