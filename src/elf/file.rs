@@ -88,6 +88,17 @@ impl<'a> ElfFile<'a> {
         }
     }
 
+    // today our goal is to write a generic parse() function,
+    // because we're straight up repeating logic twice in 
+    // parse32 and parse64, we could achieve this through
+    // generic helpers and the generic parse.
+
+    // we need to implement the trait RawElfHeader and implement
+    // it for both Elf32_Ehdr, and Elf64_Ehdr.
+    fn parse_gen<T>(bytes: &'a [u8]) ->  Result<Self, ElfError> 
+        where T: RawElfHeader {
+    }
+
     // keep the different 32 vs 64 bits field in a trait
     // so that we can generically call this function,
     // and therefore only implement it once.
@@ -340,6 +351,17 @@ impl<'a> ElfFile<'a> {
         // that checks the section type and call parse_symbols in there.
         // parse_symbols would then take a section index, or straight
         // up a section.
+
+        // we could also rely on the section by type method, but 
+        // im not a big fan of that, maybe we could implement a
+        // sections by types method, which could take a variadic
+        // of types and return all the sections related to those
+        // type. that way we only ever call filter once.
+
+        // or we could keep the match block down there.
+
+        // even if we grab an array of sections we end up having
+        // to do a match, so we will keep the code below.
 
         let mut symbols = Vec::new();
         let mut relocation_sections = Vec::new();
