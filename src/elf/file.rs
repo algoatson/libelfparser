@@ -187,6 +187,12 @@ impl<'a> ElfFile<'a> {
         let mut relocation_sections = Vec::new();
         let mut dynamic: Option<ElfDynamicSection> = None;
 
+        // im not a big fan of the following tab cascade
+        // but its so far the best way i think i couldve
+        // implemented this so far.
+
+        // we loop once and we do all the parsing within
+        // that loop.
         for (index, section) in sections.iter().enumerate() {
             match section.section_type() {
                 // parse symbols
