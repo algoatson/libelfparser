@@ -27,7 +27,7 @@ A modern, safe, and extensible ELF parsing library written in Rust.
 - ✅ Symbol table parsing
 - ✅ Dynamic section parsing
 - ✅ Relocation parsing (in progress)
-- 🚧 String table abstraction
+- ✅ String table abstraction
 - 🚧 Architecture-specific extensions
 
 ### Planned
@@ -203,7 +203,7 @@ Currently supported:
 | Section Names | ✅ |
 | Symbols | ✅ |
 | Relocations | ✅ |
-| Dynamic Linking | 🚧 |
+| Dynamic Linking | ✅ |
 | DWARF | ⬜ |
 
 ---
