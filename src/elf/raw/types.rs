@@ -8,7 +8,6 @@ use super::{Elf32_Rela, Elf64_Rela};
 use super::{Elf32_Dyn, Elf64_Dyn};
 
 pub(crate) struct Elf32Types;
-pub(crate) struct Elf64Types;
 
 impl ElfTypes for Elf32Types {
     type Header = Elf32_Ehdr;
@@ -19,6 +18,8 @@ impl ElfTypes for Elf32Types {
     type Rela = Elf32_Rela;
     type Dynamic = Elf32_Dyn;
 }
+
+pub(crate) struct Elf64Types;
 
 impl ElfTypes for Elf64Types {
     type Header = Elf64_Ehdr;
