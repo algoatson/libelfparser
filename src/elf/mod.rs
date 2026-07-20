@@ -1,3 +1,4 @@
+pub mod raw;
 pub mod header;
 pub mod file;
 pub mod program;
@@ -7,7 +8,6 @@ pub mod relocation;
 pub mod dynamic;
 pub mod utility;
 
-mod raw;
 mod enums;
 mod error;
 mod constants;

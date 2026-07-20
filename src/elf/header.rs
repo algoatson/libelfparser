@@ -1,6 +1,6 @@
-use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags, SymbolBinding, SymbolType, RelocationType, DynamicTag};
+use super::enums::{Endianness, Machine, ElfClass, FileType};
+use super::raw::RawElfHeader;
 use super::error::ElfError;
-use super::raw::{RawProgramHeader, RawSectionHeader, RawSymbol, RawElfHeader};
 
 pub struct ElfHeader {
     magic: [u8; 4],
