@@ -1,5 +1,6 @@
 use super::enums::{Endianness, Machine, ElfClass, FileType, SegmentType, SegmentFlags, SectionType, SectionFlags, SymbolBinding, SymbolType, RelocationType, DynamicTag};
-use super::raw::{RawProgramHeader, RawSectionHeader, RawSymbol, RawDynamic};
+use super::error::ElfError;
+use super::raw::{RawProgramHeader, RawSectionHeader, RawSymbol, RawElfHeader};
 
 pub struct ElfHeader {
     magic: [u8; 4],
@@ -22,6 +23,29 @@ pub struct ElfHeader {
 }
 
 impl ElfHeader {
+    pub(crate) fn from<T: RawElfHeader>(
+        raw: &T,
+    ) -> Self {
+        Self {
+            magic: raw.magic(),
+            class: raw.class(),
+            endianness: raw.endianness(),
+            file_type: raw.file_type(),
+            machine: raw.machine(),
+            version: raw.version(),
+            entry: raw.entry(),
+            program_header_offset: raw.program_header_offset(),
+            section_header_offset: raw.section_header_offset(),
+
+            header_size: raw.header_size(),
+            program_header_size: raw.program_header_size(),
+            program_header_count: raw.program_header_count(),
+            section_header_size: raw.section_header_size(),
+            section_header_count: raw.section_header_count(),
+            section_name_table_index: raw.section_name_table_index(),
+        }
+    }
+
     pub(crate) fn from_32(raw: &crate::elf::raw::Elf32_Ehdr) -> Self {
         Self {
             magic: [
@@ -251,6 +275,16 @@ impl ElfProgramHeader {
     }
 
 }
+
+pub fn parse_header<T>(bytes: &[u8]) -> Result<ElfHeader, ElfError>
+    where T: RawElfHeader {
+        let raw = match T::from_bytes(bytes) {
+            Ok(value) => value,
+            Err(e) => return Err(e),
+        };
+
+        Ok(ElfHeader::from(&raw))
+    }
 
 pub struct ElfSegment<'a> {
     header: ElfProgramHeader,

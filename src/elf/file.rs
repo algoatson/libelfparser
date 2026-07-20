@@ -1,4 +1,4 @@
-use super::header::{ElfHeader, ElfProgramHeader, ElfSegment, ElfSectionHeader, ElfSection};
+use super::header::{ElfHeader, ElfProgramHeader, ElfSegment, ElfSectionHeader, ElfSection, parse_header};
 use super::symbols::{ElfSymbol, parse_symbols};
 use super::relocation::{ElfRelocationSection, parse_relocations};
 use super::dynamic::{ElfDynamicSection, parse_dynamic};
@@ -103,12 +103,8 @@ impl<'a> ElfFile<'a> {
     // so that we can generically call this function,
     // and therefore only implement it once.
     fn parse32(bytes: &'a [u8]) -> Result<Self, ElfError> {
-        let raw = match Elf32_Ehdr::from_bytes(bytes) {
-            Ok(raw) => raw,
-            Err(e) => return Err(e),
-        };
-
-        let header = ElfHeader::from_32(&raw);
+        let header 
+            = parse_header::<Elf32_Ehdr>(bytes)?;
 
         let mut segments = Vec::new();
 
@@ -257,12 +253,8 @@ impl<'a> ElfFile<'a> {
     }
 
     fn parse64(bytes: &'a [u8]) -> Result<Self, ElfError> {
-        let raw = match Elf64_Ehdr::from_bytes(bytes) {
-            Ok(raw) => raw,
-            Err(e) => return Err(e),
-        };
-
-        let header = ElfHeader::from_64(&raw);
+        let header 
+            = parse_header::<Elf64_Ehdr>(bytes)?;
 
         let mut segments = Vec::new();
 

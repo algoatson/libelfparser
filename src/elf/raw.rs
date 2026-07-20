@@ -61,6 +61,214 @@ impl Elf64_Ehdr {
     }
 }
 
+pub trait RawElfHeader {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError>
+    where
+        Self: Sized;
+
+    fn e_ident(&self) -> [u8; 16];
+    fn e_type(&self) -> u16;
+    fn e_machine(&self) -> u16;
+    fn e_version(&self) -> u32;
+    fn e_entry(&self) -> u64;
+    fn e_phoff(&self) -> u64;
+    fn e_shoff(&self) -> u64;
+    fn e_flags(&self) -> u32;
+    fn e_ehsize(&self) -> u16;
+    fn e_phentsize(&self) -> u16;
+    fn e_phnum(&self) -> u16;
+    fn e_shentsize(&self) -> u16;
+    fn e_shnum(&self) -> u16;
+    fn e_shstrndx(&self) -> u16;
+
+    fn magic(&self) -> [u8; 4] {
+        self.e_ident()[0..4]
+            .try_into()
+            .unwrap()
+    }
+
+    fn class(&self) -> ElfClass {
+        ElfClass::from(self.e_ident()[4])
+    }
+    
+    fn endianness(&self) -> Endianness {
+        Endianness::from(self.e_ident()[5])
+    }
+
+    fn file_type(&self) -> FileType {
+        FileType::from(self.e_type())
+    }
+    
+    
+    fn machine(&self) -> Machine {
+        Machine::from(self.e_machine())
+    }
+    
+    fn version(&self) -> u32 {
+        self.e_version()
+    }
+
+    fn entry(&self) -> u64 {
+        self.entry()
+    }
+
+    fn program_header_offset(&self) -> u64 {
+        self.program_header_offset()
+    }
+
+    fn section_header_offset(&self) -> u64 {
+        self.section_header_offset()
+    }
+
+    fn header_size(&self) -> u16 {
+        self.header_size
+    }
+
+    fn program_header_size(&self) -> u16 {
+        self.program_header_size
+    }
+
+    fn program_header_count(&self) -> u16 {
+        self.program_header_count()
+    }
+
+    fn section_header_size(&self) -> u16 {
+        self.section_header_size()
+    }
+
+    fn section_header_count(&self) -> u16 {
+        self.section_header_count()
+    }
+
+    fn section_name_table_index(&self) -> u32 {
+        self.section_name_table_index()
+    }
+}
+
+impl RawElfHeader for Elf32_Ehdr {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf32_Ehdr::from_bytes(bytes)
+    }
+
+    fn e_ident(&self) -> [u8; 16] {
+        self.e_ident
+    }
+
+    fn e_type(&self) -> u16 {
+        self.e_type
+    }
+
+    fn e_machine(&self) -> u16 {
+        self.e_machine
+    }
+
+    fn e_version(&self) -> u32 {
+        self.e_version
+    }
+
+    fn e_entry(&self) -> u64 {
+        self.e_entry as u64
+    }
+    
+    fn e_phoff(&self) -> u64 {
+        self.e_phoff as u64
+    }
+
+    fn e_shoff(&self) -> u64 {
+        self.e_shoff as u64
+    }
+
+    fn e_flags(&self) -> u32 {
+        self.e_flags
+    }
+
+    fn e_ehsize(&self) -> u16 {
+        self.e_ehsize
+    }
+
+    fn e_phentsize(&self) -> u16 {
+        self.e_phentsize
+    }
+
+    fn e_phnum(&self) -> u16 {
+        self.e_phnum
+    }
+
+    fn e_shentsize(&self) -> u16 {
+        self.e_shentsize
+    }
+
+    fn e_shnum(&self) -> u16 {
+        self.e_shnum
+    }
+
+    fn e_shstrndx(&self) -> u16 {
+        self.e_shstrndx
+    }
+}
+
+impl RawElfHeader for Elf64_Ehdr {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf64_Ehdr::from_bytes(bytes)
+    }
+
+    fn e_ident(&self) -> [u8; 16] {
+        self.e_ident
+    }
+
+    fn e_type(&self) -> u16 {
+        self.e_type
+    }
+
+    fn e_machine(&self) -> u16 {
+        self.e_machine
+    }
+
+    fn e_version(&self) -> u32 {
+        self.e_version
+    }
+
+    fn e_entry(&self) -> u64 {
+        self.e_entry
+    }
+    
+    fn e_phoff(&self) -> u64 {
+        self.e_phoff
+    }
+
+    fn e_shoff(&self) -> u64 {
+        self.e_shoff
+    }
+
+    fn e_flags(&self) -> u32 {
+        self.e_flags
+    }
+
+    fn e_ehsize(&self) -> u16 {
+        self.e_ehsize
+    }
+
+    fn e_phentsize(&self) -> u16 {
+        self.e_phentsize
+    }
+
+    fn e_phnum(&self) -> u16 {
+        self.e_phnum
+    }
+
+    fn e_shentsize(&self) -> u16 {
+        self.e_shentsize
+    }
+
+    fn e_shnum(&self) -> u16 {
+        self.e_shnum
+    }
+
+    fn e_shstrndx(&self) -> u16 {
+        self.e_shstrndx
+    }
+}
+
 #[repr(C)]
 pub(crate) struct Elf32_Phdr {
     pub p_type: u32,
