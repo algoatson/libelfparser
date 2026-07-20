@@ -1,4 +1,6 @@
 use super::enums::{SectionFlags, SectionType};
+use super::error::ElfError;
+use super::header::ElfHeader;
 use super::raw::RawSectionHeader;
 
 #[derive(Debug, Clone, Copy)]
@@ -158,4 +160,51 @@ impl<'a> ElfSection<'a> {
     pub fn entry_size(&self) -> u64 {
         self.header.entry_size()
     }
+}
+
+pub fn parse_sections<'a, T: RawSectionHeader>(
+    bytes: &'a [u8],
+    header: &ElfHeader
+) -> Result<Vec<ElfSection<'a>>, ElfError> {
+    let mut sections = Vec::new();
+
+    let sh_offset = header.section_header_offset() as usize;
+    let sh_size = header.section_header_size() as usize;
+    let sh_count = header.section_header_count() as usize;
+
+    for i in 0..sh_count {
+        let start = sh_offset + (i * sh_size);
+        let end = start + sh_size;
+
+        let raw_shdr = T::from_bytes(&bytes[start..end])?;
+
+        let shdr = ElfSectionHeader::from(&raw_shdr);
+
+        let data = match shdr.section_type() {
+            SectionType::NoBits => &[],
+
+            _ => {
+                let start: usize = shdr.file_offset()
+                    .try_into()
+                .map_err(|_| ElfError::InvalidOffset)?;
+                            
+            let end: usize = shdr.file_offset()
+                .checked_add(shdr.size())
+                .ok_or(ElfError::InvalidOffset)?
+                .try_into()
+                .map_err(|_| ElfError::InvalidOffset)?;
+        
+            bytes
+                .get(start..end)
+                .ok_or(ElfError::UnexpectedEOF)?
+            }
+        };
+
+        sections.push(ElfSection::new(
+            shdr,
+            data,
+        ));
+    }
+
+    Ok(sections)
 }

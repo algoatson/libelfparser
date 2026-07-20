@@ -1,6 +1,6 @@
 use super::header::{ElfHeader, parse_header};
-use super::program::{ElfProgramHeader, ElfSegment};
-use super::section::{ElfSectionHeader, ElfSection};
+use super::program::{ElfProgramHeader, ElfSegment, parse_segments};
+use super::section::{ElfSectionHeader, ElfSection, parse_sections};
 use super::symbols::{ElfSymbol, parse_symbols};
 use super::relocation::{ElfRelocationSection, parse_relocations};
 use super::dynamic::{ElfDynamicSection, parse_dynamic};
@@ -102,64 +102,12 @@ impl<'a> ElfFile<'a> {
                 parse_header::<E::Header>(bytes)?;
 
             // we need a parse_segments generic
-            let mut segments = Vec::new();
-
-            let ph_offset = header.program_header_offset() as usize;
-            let ph_size = header.program_header_size() as usize;
-            let ph_count = header.program_header_count() as usize;
-
-            for i in 0..ph_count {
-                let start = ph_offset + (i * ph_size);
-                let end = start + ph_size;
-
-                let raw_phdr = E::ProgramHeader::from_bytes(&bytes[start..end])?;
-
-                segments.push(ElfSegment::new(
-                    ElfProgramHeader::from(&raw_phdr),
-                    &bytes[start..end]
-                ));
-            }
+            let segments = 
+                parse_segments::<E::ProgramHeader>(bytes, &header)?;
 
             // we need a parse_sections generic
-            let mut sections = Vec::new();
-
-            let sh_offset = header.section_header_offset() as usize;
-            let sh_size = header.section_header_size() as usize;
-            let sh_count = header.section_header_count() as usize;
-
-            for i in 0..sh_count {
-                let start = sh_offset + (i * sh_size);
-                let end = start + sh_size;
-
-                let raw_shdr = E::SectionHeader::from_bytes(&bytes[start..end])?;
-
-                let shdr = ElfSectionHeader::from(&raw_shdr);
-
-                let data = match shdr.section_type() {
-                    SectionType::NoBits => &[],
-
-                    _ => {
-                        let start: usize = shdr.file_offset()
-                            .try_into()
-                        .map_err(|_| ElfError::InvalidOffset)?;
-                                    
-                    let end: usize = shdr.file_offset()
-                        .checked_add(shdr.size())
-                        .ok_or(ElfError::InvalidOffset)?
-                        .try_into()
-                        .map_err(|_| ElfError::InvalidOffset)?;
-                
-                    bytes
-                        .get(start..end)
-                        .ok_or(ElfError::UnexpectedEOF)?
-                    }
-                };
-
-                sections.push(ElfSection::new(
-                    shdr,
-                    data,
-                ));
-            }
+            let mut sections = 
+                parse_sections::<E::SectionHeader>(bytes, &header)?;
 
             let mut strndx = header.section_name_table_index();
 

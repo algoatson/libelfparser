@@ -1,5 +1,8 @@
 use super::enums::{SegmentFlags, SegmentType};
-use super::raw::RawProgramHeader;
+use super::error::ElfError;
+use super::header::ElfHeader;
+use super::raw::{RawElfHeader, RawProgramHeader};
+
 
 pub struct ElfProgramHeader {
     segment_type: SegmentType,
@@ -132,4 +135,27 @@ impl<'a> ElfSegment<'a> {
     pub fn alignment(&self) -> u64 {
         self.header().alignment
     }
+}
+
+pub fn parse_segments<'a, T: RawProgramHeader>(bytes: &'a [u8], header: &ElfHeader) -> Result<Vec<ElfSegment<'a>>, ElfError> {
+    let mut segments = Vec::new();
+
+    let ph_offset = header.program_header_offset() as usize;
+    let ph_size = header.program_header_size() as usize;
+    let ph_count = header.program_header_count() as usize;
+
+    for i in 0..ph_count {
+        let start = ph_offset + (i * ph_size);
+        let end = start + ph_size;
+
+        let raw_phdr = 
+            T::from_bytes(&bytes[start..end])?;
+
+        segments.push(ElfSegment::new(
+            ElfProgramHeader::from(&raw_phdr),
+            &bytes[start..end]
+        ));
+    }
+
+    Ok(segments)
 }
