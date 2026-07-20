@@ -102,6 +102,7 @@ impl<'a> ElfFile<'a> {
             let header =
                 parse_header::<Ehdr>(bytes)?;
 
+            // we need a parse_segments generic
             let mut segments = Vec::new();
 
             let ph_offset = header.program_header_offset() as usize;
@@ -120,6 +121,7 @@ impl<'a> ElfFile<'a> {
                 ));
             }
 
+            // we need a parse_sections generic
             let mut sections = Vec::new();
 
             let sh_offset = header.section_header_offset() as usize;
