@@ -1,7 +1,7 @@
 use super::enums::{SectionType, SymbolBinding, SymbolType};
 use super::error::ElfError;
 use super::utility::get_string;
-use super::header::ElfSection;
+use super::section::ElfSection;
 use super::raw::{RawSymbol, Elf32_Sym, Elf64_Sym};
 
 pub struct ElfSymbol<'a> {

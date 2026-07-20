@@ -1,8 +1,10 @@
-use super::header::{ElfHeader, ElfProgramHeader, ElfSegment, ElfSectionHeader, ElfSection, parse_header};
+use super::header::{ElfHeader, parse_header};
+use super::program::{ElfProgramHeader, ElfSegment};
+use super::section::{ElfSectionHeader, ElfSection};
 use super::symbols::{ElfSymbol, parse_symbols};
 use super::relocation::{ElfRelocationSection, parse_relocations};
 use super::dynamic::{ElfDynamicSection, parse_dynamic};
-use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr, Elf32_Sym, Elf64_Sym, Elf32_Rel, Elf32_Rela, Elf64_Rel, Elf64_Rela, Elf32_Dyn, Elf64_Dyn, RawElfHeader, RawProgramHeader, RawSectionHeader, ElfTypes, Elf32Types, Elf64Types};
+use super::raw::{RawElfHeader, RawProgramHeader, RawSectionHeader, ElfTypes, Elf32Types, Elf64Types};
 use super::enums::{SectionType};
 use super::constants::SHN_XINDEX;
 use super::error::ElfError;
@@ -82,8 +84,8 @@ impl<'a> ElfFile<'a> {
         }
 
         match ident[4] {
-            1 => Self::parse_gen::<Elf32Types>(bytes),
-            2 => Self::parse_gen::<Elf64Types>(bytes),
+            1 => Self::parse_impl::<Elf32Types>(bytes),
+            2 => Self::parse_impl::<Elf64Types>(bytes),
             other => Err(ElfError::UnknownClass(other)),
         }
     }
@@ -95,7 +97,7 @@ impl<'a> ElfFile<'a> {
 
     // we need to implement the trait RawElfHeader and implement
     // it for both Elf32_Ehdr, and Elf64_Ehdr.
-    fn parse_gen<E: ElfTypes>(bytes: &'a [u8]) ->  Result<Self, ElfError> {
+    fn parse_impl<E: ElfTypes>(bytes: &'a [u8]) ->  Result<Self, ElfError> {
             let header =
                 parse_header::<E::Header>(bytes)?;
 

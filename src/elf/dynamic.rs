@@ -1,6 +1,6 @@
 use super::enums::DynamicTag;
 use super::error::ElfError;
-use super::header::ElfSection;
+use super::section::ElfSection;
 use super::raw::RawDynamic;
 
 pub struct ElfDynamicEntry {

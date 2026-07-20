@@ -1,7 +1,7 @@
 use super::enums::RelocationType;
 use super::error::ElfError;
 use super::raw::RawRelocation;
-use super::header::ElfSection;
+use super::section::ElfSection;
 use super::symbols::ElfSymbol;
 
 pub struct ElfRelocation {

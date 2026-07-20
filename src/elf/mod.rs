@@ -1,5 +1,7 @@
 pub mod header;
 pub mod file;
+pub mod program;
+pub mod section;
 pub mod symbols;
 pub mod relocation;
 pub mod dynamic;
