@@ -69,9 +69,7 @@ pub trait RawSectionHeader {
     fn sh_addralign(&self) -> u64;
     fn sh_entsize(&self) -> u64;
 
-    fn name_offset(&self) -> u32 {
-        self.sh_name()
-    }
+    fn name_offset(&self) -> u32 { self.sh_name() }
 
     fn section_type(&self) -> SectionType {
         SectionType::from(self.sh_type())
@@ -81,33 +79,13 @@ pub trait RawSectionHeader {
         SectionFlags::from_bits_truncate(self.sh_flags() as u64)
     }
 
-    fn virtual_address(&self) -> u64 {
-        self.sh_addr()
-    }
-
-    fn file_offset(&self) -> u64 {
-        self.sh_offset()
-    }
-
-    fn size(&self) -> u64 {
-        self.sh_size()
-    }
-
-    fn link(&self) -> u32 {
-        self.sh_link()
-    }
-
-    fn info(&self) -> u32 {
-        self.sh_info()
-    }
-
-    fn alignment(&self) -> u64 {
-        self.sh_addralign()
-    }
-
-    fn entry_size(&self) -> u64 {
-        self.sh_entsize()
-    }
+    fn virtual_address(&self) -> u64 { self.sh_addr() }
+    fn file_offset(&self) -> u64 { self.sh_offset() }
+    fn size(&self) -> u64 { self.sh_size() }
+    fn link(&self) -> u32 { self.sh_link() }
+    fn info(&self) -> u32 { self.sh_info() }
+    fn alignment(&self) -> u64 { self.sh_addralign() }
+    fn entry_size(&self) -> u64 { self.sh_entsize() }
 }
 
 impl RawSectionHeader for Elf32_Shdr {
@@ -115,46 +93,16 @@ impl RawSectionHeader for Elf32_Shdr {
         Elf32_Shdr::from_bytes(bytes)
     }
 
-    fn sh_name(&self) -> u32 {
-        self.sh_name
-    }
-
-    fn sh_type(&self) -> u32 {
-        self.sh_type
-    }
-
-    fn sh_flags(&self) -> u64 {
-        self.sh_flags as u64
-    }
-
-
-    fn sh_addr(&self) -> u64 {
-        self.sh_addr as u64
-    }
-
-    fn sh_offset(&self) -> u64 {
-        self.sh_offset as u64
-    }
-
-    fn sh_size(&self) -> u64 {
-        self.sh_size as u64
-    }
-
-    fn sh_link(&self) -> u32 {
-        self.sh_link
-    }
-
-    fn sh_info(&self) -> u32 {
-        self.sh_info
-    }
-
-    fn sh_addralign(&self) -> u64 {
-        self.sh_addralign as u64
-    }
-
-    fn sh_entsize(&self) -> u64 {
-        self.sh_entsize as u64
-    }
+    fn sh_name(&self) -> u32 { self.sh_name }
+    fn sh_type(&self) -> u32 { self.sh_type }
+    fn sh_flags(&self) -> u64 { self.sh_flags as u64 }
+    fn sh_addr(&self) -> u64 { self.sh_addr as u64 }
+    fn sh_offset(&self) -> u64 { self.sh_offset as u64 }
+    fn sh_size(&self) -> u64 { self.sh_size as u64 }
+    fn sh_link(&self) -> u32 { self.sh_link }
+    fn sh_info(&self) -> u32 { self.sh_info }
+    fn sh_addralign(&self) -> u64 { self.sh_addralign as u64 }
+    fn sh_entsize(&self) -> u64 { self.sh_entsize as u64 }
 }
 
 impl RawSectionHeader for Elf64_Shdr {
@@ -162,43 +110,14 @@ impl RawSectionHeader for Elf64_Shdr {
         Elf64_Shdr::from_bytes(bytes)
     }
 
-    fn sh_name(&self) -> u32 {
-        self.sh_name
-    }
-
-    fn sh_type(&self) -> u32 {
-        self.sh_type
-    }
-
-    fn sh_flags(&self) -> u64 {
-        self.sh_flags
-    }
-
-    fn sh_addr(&self) -> u64 {
-        self.sh_addr
-    }
-
-    fn sh_offset(&self) -> u64 {
-        self.sh_offset
-    }
-
-    fn sh_size(&self) -> u64 {
-        self.sh_size
-    }
-
-    fn sh_link(&self) -> u32 {
-        self.sh_link
-    }
-
-    fn sh_info(&self) -> u32 {
-        self.sh_info
-    }
-
-    fn sh_addralign(&self) -> u64 {
-        self.sh_addralign
-    }
-
-    fn sh_entsize(&self) -> u64 {
-        self.sh_entsize
-    }
+    fn sh_name(&self) -> u32 { self.sh_name }
+    fn sh_type(&self) -> u32 { self.sh_type }
+    fn sh_flags(&self) -> u64 { self.sh_flags }
+    fn sh_addr(&self) -> u64 { self.sh_addr }
+    fn sh_offset(&self) -> u64 { self.sh_offset }
+    fn sh_size(&self) -> u64 { self.sh_size }
+    fn sh_link(&self) -> u32 { self.sh_link }
+    fn sh_info(&self) -> u32 { self.sh_info }
+    fn sh_addralign(&self) -> u64 { self.sh_addralign }
+    fn sh_entsize(&self) -> u64 { self.sh_entsize }
 }
