@@ -88,6 +88,9 @@ impl<'a> ElfFile<'a> {
         }
     }
 
+    // keep the different 32 vs 64 bits field in a trait
+    // so that we can generically call this function,
+    // and therefore only implement it once.
     fn parse32(bytes: &'a [u8]) -> Result<Self, ElfError> {
         let raw = match Elf32_Ehdr::from_bytes(bytes) {
             Ok(raw) => raw,
@@ -195,7 +198,10 @@ impl<'a> ElfFile<'a> {
                 // parse symbols
                 SectionType::SymbolTable | SectionType::DynSym => {
                     symbols.extend(
-                        parse_symbols::<Elf32_Sym>(index, &sections)?
+                        parse_symbols::<Elf32_Sym>(
+                            index, 
+                            &sections
+                        )?
                     );
                 }
 
@@ -344,7 +350,9 @@ impl<'a> ElfFile<'a> {
                 // parse symbols
                 SectionType::SymbolTable | SectionType::DynSym => {
                     symbols.extend(
-                        parse_symbols::<Elf64_Sym>(index, &sections)?
+                        parse_symbols::<Elf64_Sym>(
+                            index, 
+                            &sections)?
                     );
                 }
 
