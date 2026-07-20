@@ -79,7 +79,7 @@ pub trait RawElfHeader {
     fn e_phnum(&self) -> u16;
     fn e_shentsize(&self) -> u16;
     fn e_shnum(&self) -> u16;
-    fn e_shstrndx(&self) -> u16;
+    fn e_shstrndx(&self) -> u32;
 
     fn magic(&self) -> [u8; 4] {
         self.e_ident()[0..4]
@@ -109,39 +109,39 @@ pub trait RawElfHeader {
     }
 
     fn entry(&self) -> u64 {
-        self.entry()
+        self.e_entry()
     }
 
     fn program_header_offset(&self) -> u64 {
-        self.program_header_offset()
+        self.e_phoff()
     }
 
     fn section_header_offset(&self) -> u64 {
-        self.section_header_offset()
+        self.e_shoff()
     }
 
     fn header_size(&self) -> u16 {
-        self.header_size
+        self.e_ehsize()
     }
 
     fn program_header_size(&self) -> u16 {
-        self.program_header_size
+        self.e_phentsize()
     }
 
     fn program_header_count(&self) -> u16 {
-        self.program_header_count()
+        self.e_phnum()
     }
 
     fn section_header_size(&self) -> u16 {
-        self.section_header_size()
+        self.e_shentsize()
     }
 
     fn section_header_count(&self) -> u16 {
-        self.section_header_count()
+        self.e_shnum()
     }
 
     fn section_name_table_index(&self) -> u32 {
-        self.section_name_table_index()
+        self.e_shstrndx()
     }
 }
 
@@ -202,8 +202,8 @@ impl RawElfHeader for Elf32_Ehdr {
         self.e_shnum
     }
 
-    fn e_shstrndx(&self) -> u16 {
-        self.e_shstrndx
+    fn e_shstrndx(&self) -> u32 {
+        self.e_shstrndx as u32
     }
 }
 
@@ -264,8 +264,8 @@ impl RawElfHeader for Elf64_Ehdr {
         self.e_shnum
     }
 
-    fn e_shstrndx(&self) -> u16 {
-        self.e_shstrndx
+    fn e_shstrndx(&self) -> u32 {
+        self.e_shstrndx as u32
     }
 }
 
@@ -368,6 +368,10 @@ impl Elf64_Sym {
 }
 
 pub trait RawProgramHeader {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError>
+    where
+        Self: Sized;
+
     // Required
     fn p_type(&self) -> u32;
     fn p_offset(&self) -> u64;
@@ -413,6 +417,10 @@ pub trait RawProgramHeader {
 }
 
 impl RawProgramHeader for Elf32_Phdr {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf32_Phdr::from_bytes(bytes)
+    }
+
     fn p_type(&self) -> u32 { self.p_type }
     fn p_offset(&self) -> u64 { self.p_offset as u64 }
     fn p_vaddr(&self) -> u64 { self.p_vaddr as u64 }
@@ -424,6 +432,10 @@ impl RawProgramHeader for Elf32_Phdr {
 }
 
 impl RawProgramHeader for Elf64_Phdr {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf64_Phdr::from_bytes(bytes)
+    }
+
     fn p_type(&self) -> u32 { self.p_type }
     fn p_offset(&self) -> u64 { self.p_offset as u64 }
     fn p_vaddr(&self) -> u64 { self.p_vaddr as u64 }
@@ -435,6 +447,10 @@ impl RawProgramHeader for Elf64_Phdr {
 }
 
 pub trait RawSectionHeader {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError>
+    where
+        Self: Sized;
+
     fn name_offset(&self) -> u32;
     fn section_type(&self) -> SectionType;
     fn flags(&self) -> SectionFlags;
@@ -448,6 +464,10 @@ pub trait RawSectionHeader {
 }
 
 impl RawSectionHeader for Elf32_Shdr {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf32_Shdr::from_bytes(bytes)
+    }
+
     fn name_offset(&self) -> u32 {
         self.sh_name
     }
@@ -490,6 +510,10 @@ impl RawSectionHeader for Elf32_Shdr {
 }
 
 impl RawSectionHeader for Elf64_Shdr {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, ElfError> {
+        Elf64_Shdr::from_bytes(bytes)
+    }
+
     fn name_offset(&self) -> u32 {
         self.sh_name
     }
