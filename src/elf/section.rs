@@ -123,8 +123,6 @@ impl<'a> ElfSection<'a> {
         sections.get(self.link() as usize)
     }
 
-    // forwarder functions
-
     pub fn name_offset(&self) -> u32 {
         self.header.name_offset()
     }
