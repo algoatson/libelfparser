@@ -1,10 +1,10 @@
 use super::header::{ElfHeader, parse_header};
-use super::program::{ElfProgramHeader, ElfSegment, parse_segments};
-use super::section::{ElfSectionHeader, ElfSection, parse_sections};
+use super::program::{ElfSegment, parse_segments};
+use super::section::{ElfSection, parse_sections};
 use super::symbols::{ElfSymbol, parse_symbols};
 use super::relocation::{ElfRelocationSection, parse_relocations};
 use super::dynamic::{ElfDynamicSection, parse_dynamic};
-use super::raw::{RawElfHeader, RawProgramHeader, RawSectionHeader, ElfTypes, Elf32Types, Elf64Types};
+use super::raw::{ElfTypes, Elf32Types, Elf64Types};
 use super::enums::{SectionType};
 use super::constants::SHN_XINDEX;
 use super::error::ElfError;
@@ -98,37 +98,37 @@ impl<'a> ElfFile<'a> {
     // we need to implement the trait RawElfHeader and implement
     // it for both Elf32_Ehdr, and Elf64_Ehdr.
     fn parse_impl<E: ElfTypes>(bytes: &'a [u8]) ->  Result<Self, ElfError> {
-            let header =
-                parse_header::<E::Header>(bytes)?;
+        let header =
+            parse_header::<E::Header>(bytes)?;
 
-            // we need a parse_segments generic
-            let segments = 
-                parse_segments::<E::ProgramHeader>(bytes, &header)?;
+        // we need a parse_segments generic
+        let segments = 
+            parse_segments::<E::ProgramHeader>(bytes, &header)?;
 
-            // we need a parse_sections generic
-            let mut sections = 
-                parse_sections::<E::SectionHeader>(bytes, &header)?;
+        // we need a parse_sections generic
+        let mut sections = 
+            parse_sections::<E::SectionHeader>(bytes, &header)?;
 
-            let mut strndx = header.section_name_table_index();
+        let mut strndx = header.section_name_table_index();
 
-            if strndx == SHN_XINDEX {
-                strndx = sections[0].header().link();
-            }
+        if strndx == SHN_XINDEX {
+            strndx = sections[0].header().link();
+        }
 
-            let strtab = sections
-                .get(strndx as usize)
-                .ok_or(ElfError::InvalidSectionIndex)?;
+        let strtab = sections
+            .get(strndx as usize)
+            .ok_or(ElfError::InvalidSectionIndex)?;
 
-            let strtab_data = strtab.data();
+        let strtab_data = strtab.data();
 
-            for section in &mut sections {
-                let name = get_string(
-                    strtab_data,
-                    section.name_offset()
-                )?;
+        for section in &mut sections {
+            let name = get_string(
+                strtab_data,
+                section.name_offset()
+            )?;
 
-                section.set_name(name)
-            }
+            section.set_name(name)
+        }
 
         let mut symbols = Vec::new();
         let mut relocation_sections = Vec::new();
