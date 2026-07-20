@@ -1,8 +1,8 @@
-use super::enums::{SectionType, SymbolBinding, SymbolType};
+use super::enums::{SymbolBinding, SymbolType};
 use super::error::ElfError;
 use super::utility::get_string;
 use super::section::ElfSection;
-use super::raw::{RawSymbol, Elf32_Sym, Elf64_Sym};
+use super::raw::RawSymbol;
 
 pub struct ElfSymbol<'a> {
     name: Option<&'a str>,

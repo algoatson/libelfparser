@@ -42,8 +42,16 @@ pub trait RawDynamic {
     where
         Self: Sized;
 
-    fn tag(&self) -> DynamicTag;
-    fn value(&self) -> u64;
+    fn d_tag(&self) -> i64;
+    fn d_un(&self)  -> u64;
+
+    fn tag(&self) -> DynamicTag {
+        DynamicTag::from(self.d_tag())
+    }
+
+    fn value(&self) -> u64 {
+        self.d_un()
+    }
 }
 
 impl RawDynamic for Elf32_Dyn {
@@ -51,11 +59,11 @@ impl RawDynamic for Elf32_Dyn {
         Elf32_Dyn::from_bytes(bytes)
     }
 
-    fn tag(&self) -> DynamicTag {
-        DynamicTag::from(self.d_tag as i64)
+    fn d_tag(&self) -> i64 {
+        self.d_tag as i64
     }
 
-    fn value(&self) -> u64 {
+    fn d_un(&self)  -> u64 {
         self.d_un as u64
     }
 }
@@ -65,11 +73,11 @@ impl RawDynamic for Elf64_Dyn {
         Elf64_Dyn::from_bytes(bytes)
     }
 
-    fn tag(&self) -> DynamicTag {
-        DynamicTag::from(self.d_tag)
+    fn d_tag(&self) -> i64 {
+        self.d_tag
     }
 
-    fn value(&self) -> u64 {
+    fn d_un(&self) -> u64 {
         self.d_un
     }
 }

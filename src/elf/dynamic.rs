@@ -18,13 +18,8 @@ impl ElfDynamicEntry {
         }
     }
 
-    pub fn tag(&self) -> DynamicTag {
-        self.tag
-    }
-
-    pub fn value(&self) -> u64 {
-        self.value
-    }
+    pub fn tag(&self) -> DynamicTag { self.tag }
+    pub fn value(&self) -> u64 { self.value }
 }
 
 pub struct ElfDynamicSection {
