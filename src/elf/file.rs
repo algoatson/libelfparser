@@ -2,7 +2,7 @@ use super::header::{ElfHeader, ElfProgramHeader, ElfSegment, ElfSectionHeader, E
 use super::symbols::{ElfSymbol, parse_symbols};
 use super::relocation::{ElfRelocationSection, parse_relocations};
 use super::dynamic::{ElfDynamicSection, parse_dynamic};
-use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr, Elf32_Sym, Elf64_Sym, Elf32_Rel, Elf32_Rela, Elf64_Rel, Elf64_Rela, Elf32_Dyn, Elf64_Dyn, RawElfHeader, RawProgramHeader, RawSectionHeader};
+use super::raw::{Elf32_Ehdr, Elf64_Ehdr, Elf32_Phdr, Elf64_Phdr, Elf32_Shdr, Elf64_Shdr, Elf32_Sym, Elf64_Sym, Elf32_Rel, Elf32_Rela, Elf64_Rel, Elf64_Rela, Elf32_Dyn, Elf64_Dyn, RawElfHeader, RawProgramHeader, RawSectionHeader, ElfTypes};
 use super::enums::{SectionType};
 use super::constants::SHN_XINDEX;
 use super::error::ElfError;
@@ -95,12 +95,9 @@ impl<'a> ElfFile<'a> {
 
     // we need to implement the trait RawElfHeader and implement
     // it for both Elf32_Ehdr, and Elf64_Ehdr.
-    fn parse_gen<Ehdr, Phdr, Shdr>(bytes: &'a [u8]) ->  Result<Self, ElfError> 
-        where Ehdr: RawElfHeader,
-              Phdr: RawProgramHeader,
-              Shdr: RawSectionHeader, {
+    fn parse_gen<E: ElfTypes>(bytes: &'a [u8]) ->  Result<Self, ElfError> {
             let header =
-                parse_header::<Ehdr>(bytes)?;
+                parse_header::<E::Header>(bytes)?;
 
             // we need a parse_segments generic
             let mut segments = Vec::new();
@@ -113,7 +110,7 @@ impl<'a> ElfFile<'a> {
                 let start = ph_offset + (i * ph_size);
                 let end = start + ph_size;
 
-                let raw_phdr = Phdr::from_bytes(&bytes[start..end])?;
+                let raw_phdr = E::ProgramHeader::from_bytes(&bytes[start..end])?;
 
                 segments.push(ElfSegment::new(
                     ElfProgramHeader::from(&raw_phdr),
@@ -132,7 +129,7 @@ impl<'a> ElfFile<'a> {
                 let start = sh_offset + (i * sh_size);
                 let end = start + sh_size;
 
-                let raw_shdr = Shdr::from_bytes(&bytes[start..end])?;
+                let raw_shdr = E::SectionHeader::from_bytes(&bytes[start..end])?;
 
                 let shdr = ElfSectionHeader::from(&raw_shdr);
 
@@ -198,7 +195,7 @@ impl<'a> ElfFile<'a> {
                 // parse symbols
                 SectionType::SymbolTable | SectionType::DynSym => {
                     symbols.extend(
-                        parse_symbols::<Elf64_Sym>(
+                        parse_symbols::<E::Symbol>(
                             index, 
                             &sections)?
                     );
@@ -206,7 +203,7 @@ impl<'a> ElfFile<'a> {
 
                 // parse dynamic section
                 SectionType::Dynamic => {
-                    dynamic = parse_dynamic::<Elf64_Dyn>(
+                    dynamic = parse_dynamic::<E::Dynamic>(
                         index, 
                         &section
                     )?;
@@ -215,7 +212,7 @@ impl<'a> ElfFile<'a> {
                 // parse relocations
                 SectionType::Rel => {
                     relocation_sections.extend(
-                        parse_relocations::<Elf64_Rel>(
+                        parse_relocations::<E::Rel>(
                             index,
                             &sections
                         )
@@ -225,7 +222,7 @@ impl<'a> ElfFile<'a> {
                 // parse relocations
                 SectionType::Rela => {
                     relocation_sections.extend(
-                        parse_relocations::<Elf64_Rela>(
+                        parse_relocations::<E::Rela>(
                             index,
                             &sections
                         )

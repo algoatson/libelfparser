@@ -831,3 +831,38 @@ impl Elf64_Dyn {
         read_struct(bytes)
     }
 }
+
+
+pub trait ElfTypes {
+    type Header: RawElfHeader;
+    type ProgramHeader: RawProgramHeader;
+    type SectionHeader: RawSectionHeader;
+    type Symbol: RawSymbol;
+    type Rel: RawRelocation;
+    type Rela: RawRelocation;
+    type Dynamic: RawDynamic;
+}
+
+struct Elf32Types;
+
+impl ElfTypes for Elf32Types {
+    type Header = Elf32_Ehdr;
+    type ProgramHeader = Elf32_Phdr;
+    type SectionHeader = Elf32_Shdr;
+    type Symbol = Elf32_Sym;
+    type Rel = Elf32_Rel;
+    type Rela = Elf32_Rela;
+    type Dynamic = Elf32_Dyn;
+}
+
+struct Elf64Types;
+
+impl ElfTypes for Elf64Types {
+    type Header = Elf64_Ehdr;
+    type ProgramHeader = Elf64_Phdr;
+    type SectionHeader = Elf64_Shdr;
+    type Symbol = Elf64_Sym;
+    type Rel = Elf64_Rel;
+    type Rela = Elf64_Rela;
+    type Dynamic = Elf64_Dyn;
+}
